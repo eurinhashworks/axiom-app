@@ -4,16 +4,19 @@ import {
   setDoc, 
   getDoc, 
   getDocs, 
+  deleteDoc,
   query, 
   where, 
   orderBy, 
   limit,
   Timestamp,
   DocumentData,
-  QuerySnapshot
+  QuerySnapshot,
+  onSnapshot,
+  Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Idea } from '../types';
+import { Idea, Comment } from '../types';
 import { 
   MarketAnalysis, 
   UserProfile, 
@@ -28,20 +31,64 @@ export class FirebaseService {
   private userProfilesCollection = collection(db, 'userProfiles');
   private feedbackCollection = collection(db, 'feedback');
   private trainingDataCollection = collection(db, 'trainingData');
+  private commentsCollection = collection(db, 'comments');
 
-  async saveIdea(idea: Idea, userId: string): Promise<void> {
-    const ideaData = {
+  /**
+   * Nettoie un objet en supprimant toutes les valeurs undefined
+   * Firestore ne supporte pas les valeurs undefined
+   */
+  private cleanFirestoreData(data: any): any {
+    if (data === null || data === undefined) {
+      return null;
+    }
+    
+    if (Array.isArray(data)) {
+      return data.map(item => this.cleanFirestoreData(item));
+    }
+    
+    if (typeof data === 'object' && !(data instanceof Timestamp)) {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(data)) {
+        // Omettre les clés avec des valeurs undefined
+        if (value !== undefined) {
+          cleaned[key] = this.cleanFirestoreData(value);
+        }
+      }
+      return cleaned;
+    }
+    
+    return data;
+  }
+
+  async saveIdea(idea: Idea, userId: string, userData?: { displayName?: string | null; photoURL?: string | null }): Promise<string> {
+    const ideaData: any = {
       ...idea,
       userId,
-      createdAt: idea.createdAt || Timestamp.now(),
+      createdAt: idea.createdAt ? Timestamp.fromMillis(idea.createdAt) : Timestamp.now(),
       updatedAt: Timestamp.now()
     };
+
+    // Si l'idée devient publique, ajouter les informations d'auteur
+    if (idea.isPublic && userData) {
+      ideaData.authorId = userId;
+      ideaData.authorName = userData.displayName || 'Utilisateur anonyme';
+      ideaData.authorPhotoURL = userData.photoURL || null;
+    }
+
+    // Nettoyer les données pour supprimer les valeurs undefined
+    const cleanedData = this.cleanFirestoreData(ideaData);
 
     const ideaRef = idea.id 
       ? doc(this.ideasCollection, idea.id)
       : doc(this.ideasCollection);
 
-    await setDoc(ideaRef, ideaData, { merge: true });
+    await setDoc(ideaRef, cleanedData, { merge: true });
+    return ideaRef.id;
+  }
+
+  async deleteIdea(ideaId: string): Promise<void> {
+    const ideaRef = doc(this.ideasCollection, ideaId);
+    await deleteDoc(ideaRef);
   }
 
   async getIdeas(userId: string, limitCount?: number): Promise<Idea[]> {
@@ -52,19 +99,216 @@ export class FirebaseService {
     }
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title || '',
+        status: data.status || 'DRAFT',
+        brainDump: data.brainDump || '',
+        createdAt: data.createdAt?.toMillis() || Date.now(),
+        updatedAt: data.updatedAt?.toMillis(),
+        marketSize: data.marketSize || 0,
+        problemUrgency: data.problemUrgency || 0,
+        targetAudience: data.targetAudience || 0,
+        analysis: data.analysis,
+        evaluation: data.evaluation,
+        roadmapSteps: data.roadmapSteps,
+        opportunityScore: data.opportunityScore,
+        feasibilityScore: data.feasibilityScore,
+        isPublic: data.isPublic || false,
+        authorId: data.authorId,
+        authorName: data.authorName,
+        authorPhotoURL: data.authorPhotoURL
+      } as Idea;
+    });
+  }
+
+  subscribeToIdeas(userId: string, callback: (ideas: Idea[]) => void): Unsubscribe {
+    const q = query(this.ideasCollection, where('userId', '==', userId), orderBy('createdAt', 'desc'));
+    
+    return onSnapshot(q, (snapshot) => {
+      const ideas = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title || '',
+          status: data.status || 'DRAFT',
+          brainDump: data.brainDump || '',
+          createdAt: data.createdAt?.toMillis() || Date.now(),
+          updatedAt: data.updatedAt?.toMillis(),
+          marketSize: data.marketSize || 0,
+          problemUrgency: data.problemUrgency || 0,
+          targetAudience: data.targetAudience || 0,
+          analysis: data.analysis,
+          evaluation: data.evaluation,
+          roadmapSteps: data.roadmapSteps,
+          opportunityScore: data.opportunityScore,
+          feasibilityScore: data.feasibilityScore
+        } as Idea;
+      });
+      callback(ideas);
+    }, (error: any) => {
+      // Ne pas logger les erreurs de réseau temporaires
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        return;
+      }
+      
+      console.error('Error subscribing to ideas:', error);
+    });
+  }
+
+  async getPublicIdeas(limitCount: number = 50): Promise<Idea[]> {
+    // Utiliser une requête sans orderBy pour éviter le besoin d'un index composite
+    // Le tri se fera côté client
+    let q = query(
+      this.ideasCollection,
+      where('isPublic', '==', true)
+    );
+    
+    // Limiter légèrement plus pour compenser le tri côté client
+    if (limitCount) {
+      q = query(q, limit(Math.min(limitCount * 2, 100)));
+    }
+
+    const snapshot = await getDocs(q);
+    const ideas = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title || '',
+        status: data.status || 'DRAFT',
+        brainDump: data.brainDump || '',
+        createdAt: data.createdAt?.toMillis() || Date.now(),
+        updatedAt: data.updatedAt?.toMillis(),
+        marketSize: data.marketSize || 0,
+        problemUrgency: data.problemUrgency || 0,
+        targetAudience: data.targetAudience || 0,
+        analysis: data.analysis,
+        evaluation: data.evaluation,
+        roadmapSteps: data.roadmapSteps,
+        opportunityScore: data.opportunityScore,
+        feasibilityScore: data.feasibilityScore,
+        isPublic: true,
+        authorId: data.authorId || data.userId,
+        authorName: data.authorName,
+        authorPhotoURL: data.authorPhotoURL
+      } as Idea;
+    });
+    
+    // Trier côté client par date de création (plus récent en premier)
+    ideas.sort((a, b) => b.createdAt - a.createdAt);
+    
+    // Limiter après le tri
+    return limitCount ? ideas.slice(0, limitCount) : ideas;
+  }
+
+  subscribeToPublicIdeas(callback: (ideas: Idea[]) => void, limitCount: number = 20): Unsubscribe {
+    // Utiliser une requête sans orderBy pour éviter le besoin d'un index composite
+    // Le tri se fera côté client
+    let q = query(
+      this.ideasCollection,
+      where('isPublic', '==', true),
+      limit(limitCount || 20)
+    );
+    
+    return onSnapshot(q, (snapshot) => {
+      const ideas = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title || '',
+          status: data.status || 'DRAFT',
+          brainDump: data.brainDump || '',
+          createdAt: data.createdAt?.toMillis() || Date.now(),
+          updatedAt: data.updatedAt?.toMillis(),
+          marketSize: data.marketSize || 0,
+          problemUrgency: data.problemUrgency || 0,
+          targetAudience: data.targetAudience || 0,
+          analysis: data.analysis,
+          evaluation: data.evaluation,
+          roadmapSteps: data.roadmapSteps,
+          opportunityScore: data.opportunityScore,
+          feasibilityScore: data.feasibilityScore,
+          isPublic: true,
+          authorId: data.authorId || data.userId,
+          authorName: data.authorName,
+          authorPhotoURL: data.authorPhotoURL
+        } as Idea;
+      });
+      
+      // Trier côté client par date de création (plus récent en premier)
+      ideas.sort((a, b) => b.createdAt - a.createdAt);
+      
+      callback(ideas);
+    }, (error: any) => {
+      if (error.code === 'failed-precondition' || error.message?.includes('index')) {
+        return;
+      }
+      
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        return;
+      }
+      
+      console.error('Error subscribing to public ideas:', error);
+    });
+  }
+
+  // Méthode pour charger toutes les idées publiques (pour pagination côté client)
+  async getAllPublicIdeas(): Promise<Idea[]> {
+    try {
+      const snapshot = await getDocs(
+        query(
+          this.ideasCollection,
+          where('isPublic', '==', true),
+          limit(200) // Limite Firestore
+        )
+      );
+
+      const ideas = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
       id: doc.id,
-      ...doc.data()
-    } as Idea));
+          title: data.title || '',
+          status: data.status || 'DRAFT',
+          brainDump: data.brainDump || '',
+          createdAt: data.createdAt?.toMillis() || Date.now(),
+          updatedAt: data.updatedAt?.toMillis(),
+          marketSize: data.marketSize || 0,
+          problemUrgency: data.problemUrgency || 0,
+          targetAudience: data.targetAudience || 0,
+          analysis: data.analysis,
+          evaluation: data.evaluation,
+          roadmapSteps: data.roadmapSteps,
+          opportunityScore: data.opportunityScore,
+          feasibilityScore: data.feasibilityScore,
+          isPublic: true,
+          authorId: data.authorId || data.userId,
+          authorName: data.authorName,
+          authorPhotoURL: data.authorPhotoURL
+        } as Idea;
+      });
+
+      // Trier côté client par date de création (plus récent en premier)
+      ideas.sort((a, b) => b.createdAt - a.createdAt);
+      
+      return ideas;
+    } catch (error: any) {
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        return [];
+      }
+      throw error;
+    }
   }
 
   async saveMarketAnalysis(ideaId: string, analysis: MarketAnalysis): Promise<void> {
     const analysisRef = doc(this.marketAnalysisCollection, ideaId);
-    await setDoc(analysisRef, {
+    const data = {
       ...analysis,
       ideaId,
       timestamp: Timestamp.now()
-    });
+    };
+    await setDoc(analysisRef, this.cleanFirestoreData(data));
   }
 
   async getMarketAnalysis(ideaId: string): Promise<MarketAnalysis | null> {
@@ -91,13 +335,14 @@ export class FirebaseService {
     // Si le profil existe déjà, on merge seulement les nouvelles données
     if (existingProfile.exists()) {
       const existingData = existingProfile.data();
-      await setDoc(profileRef, {
+      const mergedData = {
         ...existingData,
         ...profileData
-      }, { merge: true });
+      };
+      await setDoc(profileRef, this.cleanFirestoreData(mergedData), { merge: true });
     } else {
       // Créer un nouveau profil avec les valeurs par défaut
-      await setDoc(profileRef, {
+      const defaultData = {
         preferences: {
           riskTolerance: 'medium',
           innovationLevel: 'incremental',
@@ -121,59 +366,54 @@ export class FirebaseService {
         industryFocus: [],
         pastIdeaOutcomes: [],
         ...profileData
-      });
+      };
+      await setDoc(profileRef, this.cleanFirestoreData(defaultData));
     }
   }
 
   async getUserProfile(userId: string): Promise<UserProfile | null> {
-    const profileRef = doc(this.userProfilesCollection, userId);
-    const profileDoc = await getDoc(profileRef);
-    
-    if (profileDoc.exists()) {
-      return profileDoc.data() as UserProfile;
+    try {
+      const profileRef = doc(this.userProfilesCollection, userId);
+      const profileDoc = await getDoc(profileRef);
+      
+      if (profileDoc.exists()) {
+        const data = profileDoc.data();
+        return {
+          userId: data.userId || userId,
+          email: data.email,
+          displayName: data.displayName,
+          photoURL: data.photoURL,
+          preferences: data.preferences || {
+            riskTolerance: 'medium',
+            innovationLevel: 'incremental',
+            preferredIndustries: [],
+          },
+          industryFocus: data.industryFocus || [],
+          pastIdeaOutcomes: data.pastIdeaOutcomes || [],
+          historicalData: data.historicalData || [],
+          industryExpertise: data.industryExpertise || [],
+          riskTolerance: data.riskTolerance || 'medium',
+          lastUpdated: data.lastUpdated,
+        } as UserProfile;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting user profile:', error);
+      return null;
     }
-    
-    // Create default profile if it doesn't exist
-    const defaultProfile: UserProfile = {
-      userId,
-      preferences: {
-        opportunityWeights: {
-          marketSize: 0.3,
-          problemUrgency: 0.25,
-          targetAudience: 0.2,
-          competition: 0.15,
-          timing: 0.1
-        },
-        feasibilityWeights: {
-          technical: 0.3,
-          financial: 0.25,
-          resources: 0.2,
-          timeline: 0.15,
-          expertise: 0.1
-        },
-        riskTolerance: 'medium',
-        timeHorizon: 'medium'
-      },
-      industryFocus: [],
-      pastIdeaOutcomes: [],
-      historicalData: [],
-      industryExpertise: [],
-      lastUpdated: Timestamp.now()
-    };
-
-    await this.saveUserProfile(userId, defaultProfile);
-    return defaultProfile;
   }
 
   async saveFeedback(ideaId: string, feedback: string, userId: string, rating?: number): Promise<void> {
     const feedbackRef = doc(this.feedbackCollection);
-    await setDoc(feedbackRef, {
+    const feedbackData = {
       ideaId,
       userId,
       feedback,
       rating,
       timestamp: Timestamp.now()
-    });
+    };
+    await setDoc(feedbackRef, this.cleanFirestoreData(feedbackData));
   }
 
   async getFeedback(ideaId: string): Promise<Array<{feedback: string, rating?: number, timestamp: Timestamp}>> {
@@ -191,10 +431,11 @@ export class FirebaseService {
     const outcomesRef = collection(db, 'ideaOutcomes');
     const outcomeRef = doc(outcomesRef);
     
-    await setDoc(outcomeRef, {
+    const data = {
       ...outcome,
       timestamp: Timestamp.now()
-    });
+    };
+    await setDoc(outcomeRef, this.cleanFirestoreData(data));
   }
 
   async getHistoricalData(userId: string, limitCount: number = 100): Promise<TrainingData[]> {
@@ -299,10 +540,11 @@ export class FirebaseService {
     const scoringRef = collection(db, 'scoringResults');
     const resultRef = doc(scoringRef);
     
-    await setDoc(resultRef, {
+    const data = {
       ideaId,
       ...scoringResult
-    });
+    };
+    await setDoc(resultRef, this.cleanFirestoreData(data));
   }
 
   async getLatestScoringResult(ideaId: string): Promise<ScoringResult | null> {
@@ -313,6 +555,78 @@ export class FirebaseService {
     if (snapshot.empty) return null;
     
     return snapshot.docs[0].data() as ScoringResult;
+  }
+
+  // Méthodes pour les commentaires
+  async addComment(ideaId: string, userId: string, userName: string, userPhotoURL: string | null, content: string): Promise<string> {
+    const commentRef = doc(this.commentsCollection);
+    const commentData = {
+      ideaId,
+      userId,
+      userName,
+      userPhotoURL: userPhotoURL || null,
+      content: content.trim(),
+      createdAt: Timestamp.now()
+    };
+
+    await setDoc(commentRef, this.cleanFirestoreData(commentData));
+    return commentRef.id;
+  }
+
+  async getComments(ideaId: string): Promise<Comment[]> {
+    const q = query(
+      this.commentsCollection,
+      where('ideaId', '==', ideaId),
+      orderBy('createdAt', 'asc')
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ideaId: data.ideaId,
+        userId: data.userId,
+        userName: data.userName,
+        userPhotoURL: data.userPhotoURL,
+        content: data.content,
+        createdAt: data.createdAt?.toMillis() || Date.now()
+      } as Comment;
+    });
+  }
+
+  subscribeToComments(ideaId: string, callback: (comments: Comment[]) => void): Unsubscribe {
+    const q = query(
+      this.commentsCollection,
+      where('ideaId', '==', ideaId),
+      orderBy('createdAt', 'asc')
+    );
+
+    return onSnapshot(q, (snapshot) => {
+      const comments = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ideaId: data.ideaId,
+          userId: data.userId,
+          userName: data.userName,
+          userPhotoURL: data.userPhotoURL,
+          content: data.content,
+          createdAt: data.createdAt?.toMillis() || Date.now()
+        } as Comment;
+      });
+      callback(comments);
+    }, (error: any) => {
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        return;
+      }
+      console.error('Error subscribing to comments:', error);
+    });
+  }
+
+  async deleteComment(commentId: string): Promise<void> {
+    const commentRef = doc(this.commentsCollection, commentId);
+    await deleteDoc(commentRef);
   }
 }
 

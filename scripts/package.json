@@ -1,0 +1,13 @@
+{
+  "name": "inject-public-ideas",
+  "version": "1.0.0",
+  "description": "Script pour injecter des idées publiques dans Firestore",
+  "type": "module",
+  "scripts": {
+    "inject": "tsx scripts/injectPublicIdeas.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.7.0"
+  }
+}
+

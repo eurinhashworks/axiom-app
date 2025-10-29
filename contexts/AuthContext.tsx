@@ -42,8 +42,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             industryFocus: [],
             pastIdeaOutcomes: []
           });
-        } catch (error) {
-          console.error('Error saving user profile:', error);
+        } catch (error: any) {
+          // Ne pas bloquer l'authentification si la sauvegarde du profil échoue
+          // Cela peut arriver en mode offline ou lors de problèmes réseau temporaires
+          if (error.code !== 'unavailable' && !error.message?.includes('offline')) {
+            console.error('Error saving user profile:', error);
+          }
         }
       } else {
         setUser(null);

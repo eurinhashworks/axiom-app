@@ -7,9 +7,16 @@ interface ModalProps {
   children: React.ReactNode;
   title?: string;
   className?: string;
+  size?: 'small' | 'medium' | 'large' | 'full';
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, className = '' }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, className = '', size = 'medium' }) => {
+  const sizeClasses = {
+    small: 'max-w-sm',
+    medium: 'max-w-md',
+    large: 'max-w-4xl',
+    full: 'max-w-7xl'
+  };
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -87,7 +94,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, classNa
     >
       <Card
         ref={modalRef}
-        className={`w-full max-w-md transform transition-all animate-scale-in ${className}`}
+        className={`w-full ${sizeClasses[size]} transform transition-all animate-scale-in ${className}`}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >

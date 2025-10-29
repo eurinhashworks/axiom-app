@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function pour vérifier l'authentification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function pour vérifier si l'utilisateur est le propriétaire
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Collection des idées
+    match /ideas/{ideaId} {
+      // Lecture : propriétaire ou idée publique
+      // Pour les requêtes avec where('userId', '==', userId), tous les documents auront userId == request.auth.uid
+      // Pour les requêtes avec where('isPublic', '==', true), tous les documents auront isPublic == true
+      allow read: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.isPublic == true
+      );
+      
+      // Création : seulement utilisateur authentifié avec userId correspondant
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Modification : seulement le propriétaire
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Suppression : seulement le propriétaire
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Collection des profils utilisateurs
+    match /userProfiles/{userId} {
+      // Lecture : tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      
+      // Création : l'utilisateur peut créer son propre profil
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid &&
+        userId == request.auth.uid;
+      
+      // Mise à jour : seulement le propriétaire
+      // setDoc avec merge: true utilise update si le document existe
+      allow update: if isAuthenticated() && 
+        userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid &&
+        resource.data.userId == request.auth.uid;
+      
+      // Suppression : seulement le propriétaire
+      allow delete: if isAuthenticated() && 
+        userId == request.auth.uid;
+    }
+    
+    // Collection des commentaires
+    match /comments/{commentId} {
+      // Lecture : tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      
+      // Création : utilisateur authentifié peut créer un commentaire
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Mise à jour : seulement l'auteur du commentaire
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == request.auth.uid;
+      
+      // Suppression : seulement l'auteur du commentaire
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Collection des analyses de marché
+    match /marketAnalysis/{analysisId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Collection des feedbacks
+    match /feedback/{feedbackId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Collection des résultats de scoring
+    match /scoringResults/{resultId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Collection des données d'entraînement
+    match /trainingData/{trainingId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Collection des résultats d'idées
+    match /ideaOutcomes/{outcomeId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
+

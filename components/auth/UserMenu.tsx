@@ -22,20 +22,34 @@ const UserMenu: React.FC = () => {
     }
   };
 
+  const handleProfileClick = () => {
+    window.location.hash = '#profile';
+  };
+
   if (!user) return null;
 
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2">
         {user.photoURL && (
-          <img
-            src={user.photoURL}
-            alt={user.displayName || 'Utilisateur'}
-            className="w-8 h-8 rounded-full border-2 border-border"
-          />
+          <button
+            onClick={handleProfileClick}
+            className="hover:opacity-80 transition-opacity"
+          >
+            <img
+              src={user.photoURL}
+              alt={user.displayName || 'Utilisateur'}
+              className="w-8 h-8 rounded-full border-2 border-border cursor-pointer"
+            />
+          </button>
         )}
         <div className="hidden md:block text-right">
-          <p className="text-sm font-medium">{user.displayName || 'Utilisateur'}</p>
+          <button
+            onClick={handleProfileClick}
+            className="text-sm font-medium hover:text-brand transition-colors"
+          >
+            {user.displayName || 'Utilisateur'}
+          </button>
           <p className="text-xs text-muted-foreground truncate max-w-[150px]">
             {user.email}
           </p>

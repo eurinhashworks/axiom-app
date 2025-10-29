@@ -1,0 +1,242 @@
+import React, { useState } from 'react';
+import { Idea } from '../../types';
+import Modal from '../ui/Modal';
+import Button from '../ui/Button';
+import StatusBadge from './StatusBadge';
+import EditIdeaModal from './EditIdeaModal';
+import { useIdeas } from '../../contexts/IdeasContext';
+import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
+
+interface IdeaDetailModalProps {
+    idea: Idea;
+    isOpen: boolean;
+    onClose: () => void;
+    onNavigateToSession?: () => void;
+}
+
+const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({ 
+    idea, 
+    isOpen, 
+    onClose,
+    onNavigateToSession 
+}) => {
+    const { setActiveIdea } = useIdeas();
+    const { user } = useAuth();
+    const { showToast } = useToast();
+    const [isEditing, setIsEditing] = useState(false);
+    
+    const isOwner = user && idea.authorId === user.uid;
+
+    const handleStartSession = () => {
+        setActiveIdea(idea);
+        if (onNavigateToSession) {
+            onNavigateToSession();
+        } else {
+            window.location.hash = '#session';
+        }
+        onClose();
+    };
+
+    // La suppression se fait via le bouton dans IdeaCard
+
+    if (isEditing && isOwner) {
+        return (
+            <EditIdeaModal
+                idea={idea}
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
+            />
+        );
+    }
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} title="Détails de l'idée" size="large">
+            <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+                {/* En-tête */}
+                <div className="flex justify-between items-start gap-4 pb-4 border-b border-border">
+                    <div className="flex-1">
+                        <h2 className="text-2xl font-bold mb-2">{idea.title}</h2>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <StatusBadge status={idea.status} />
+                            <span className="text-sm text-muted-foreground">
+                                Créée le {new Date(idea.createdAt).toLocaleDateString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric'
+                                })}
+                            </span>
+                        </div>
+                    </div>
+                    {isOwner && (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                size="small"
+                                onClick={() => setIsEditing(true)}
+                                className="transition-all hover:scale-105"
+                            >
+                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Modifier
+                            </Button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Scores */}
+                {(idea.opportunityScore !== undefined || idea.feasibilityScore !== undefined) && (
+                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                        {idea.opportunityScore !== undefined && (
+                            <div>
+                                <div className="text-sm text-muted-foreground mb-1">Score d'Opportunité</div>
+                                <div className="text-2xl font-bold text-brand">{idea.opportunityScore.toFixed(1)}/10</div>
+                                <div className="w-full bg-background rounded-full h-2 mt-2">
+                                    <div 
+                                        className="bg-brand h-2 rounded-full transition-all"
+                                        style={{ width: `${(idea.opportunityScore / 10) * 100}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        {idea.feasibilityScore !== undefined && (
+                            <div>
+                                <div className="text-sm text-muted-foreground mb-1">Score de Faisabilité</div>
+                                <div className="text-2xl font-bold text-brand">{idea.feasibilityScore.toFixed(1)}/10</div>
+                                <div className="w-full bg-background rounded-full h-2 mt-2">
+                                    <div 
+                                        className="bg-brand h-2 rounded-full transition-all"
+                                        style={{ width: `${(idea.feasibilityScore / 10) * 100}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Résumé de l'analyse */}
+                {idea.analysis?.summary && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">Résumé de l'analyse</h3>
+                        <p className="text-muted-foreground leading-relaxed">{idea.analysis.summary}</p>
+                    </div>
+                )}
+
+                {/* Brain Dump */}
+                {idea.brainDump && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">Brain Dump</h3>
+                        <div className="p-4 bg-muted/30 rounded-lg border border-border">
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                                {idea.brainDump}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Questions de clarification */}
+                {idea.analysis?.clarifyingQuestions && idea.analysis.clarifyingQuestions.length > 0 && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">Questions de clarification</h3>
+                        <ul className="space-y-2">
+                            {idea.analysis.clarifyingQuestions.map((question, index) => (
+                                <li key={index} className="flex gap-2">
+                                    <span className="text-brand font-bold">•</span>
+                                    <span className="text-muted-foreground flex-1">{question}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Risques potentiels */}
+                {idea.analysis?.potentialRisks && idea.analysis.potentialRisks.length > 0 && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-2">Risques potentiels</h3>
+                        <ul className="space-y-2">
+                            {idea.analysis.potentialRisks.map((risk, index) => (
+                                <li key={index} className="flex gap-2">
+                                    <span className="text-destructive font-bold">⚠</span>
+                                    <span className="text-muted-foreground flex-1">{risk}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {/* Évaluation détaillée */}
+                {idea.evaluation && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-3">Évaluation détaillée</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 bg-muted/30 rounded-lg">
+                                <div className="text-sm text-muted-foreground">Urgence du problème</div>
+                                <div className="text-xl font-bold">{idea.evaluation.problemUrgency}/10</div>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg">
+                                <div className="text-sm text-muted-foreground">Taille du marché</div>
+                                <div className="text-xl font-bold">{idea.evaluation.targetMarketSize}/10</div>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg">
+                                <div className="text-sm text-muted-foreground">Avantage concurrentiel</div>
+                                <div className="text-xl font-bold">{idea.evaluation.competitiveAdvantage}/10</div>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg">
+                                <div className="text-sm text-muted-foreground">Alignement personnel</div>
+                                <div className="text-xl font-bold">{idea.evaluation.personalAlignment}/10</div>
+                            </div>
+                            <div className="p-3 bg-muted/30 rounded-lg col-span-2">
+                                <div className="text-sm text-muted-foreground">Faisabilité technique</div>
+                                <div className="text-xl font-bold">{idea.evaluation.technicalFeasibility}/10</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Roadmap */}
+                {idea.roadmapSteps && idea.roadmapSteps.length > 0 && (
+                    <div>
+                        <h3 className="text-lg font-semibold mb-3">Feuille de route</h3>
+                        <ol className="space-y-2">
+                            {idea.roadmapSteps.map((step, index) => (
+                                <li key={index} className="flex gap-3">
+                                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-brand/20 text-brand flex items-center justify-center text-sm font-bold">
+                                        {index + 1}
+                                    </span>
+                                    <span className={`text-muted-foreground flex-1 ${step.completed ? 'line-through opacity-60' : ''}`}>
+                                        {step.text}
+                                    </span>
+                                    {step.completed && (
+                                        <span className="text-green-600 dark:text-green-400">✓</span>
+                                    )}
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                    <Button variant="secondary" onClick={onClose}>
+                        Fermer
+                    </Button>
+                    {isOwner && (
+                        <Button
+                            onClick={handleStartSession}
+                            className="transition-all hover:scale-105"
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Ouvrir dans Session
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+export default IdeaDetailModal;
+

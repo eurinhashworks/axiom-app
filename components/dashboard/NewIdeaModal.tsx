@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { useToast } from '../../contexts/ToastContext';
+import { validateIdeaTitle } from '../../utils/validation';
 
 interface NewIdeaModalProps {
     onClose: () => void;
@@ -19,16 +20,9 @@ const NewIdeaModal: React.FC<NewIdeaModalProps> = ({ onClose, onSubmit }) => {
     }, []);
 
     const validateTitle = (value: string): boolean => {
-        if (!value.trim()) {
-            setError('Le titre ne peut pas être vide');
-            return false;
-        }
-        if (value.trim().length < 3) {
-            setError('Le titre doit contenir au moins 3 caractères');
-            return false;
-        }
-        if (value.trim().length > 100) {
-            setError('Le titre ne peut pas dépasser 100 caractères');
+        const validation = validateIdeaTitle(value);
+        if (!validation.isValid) {
+            setError(validation.errors[0] || 'Titre invalide');
             return false;
         }
         setError('');

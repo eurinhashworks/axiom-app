@@ -3,7 +3,6 @@ import { Idea } from '../../types';
 import Card from '../ui/Card';
 import StatusBadge from './StatusBadge';
 import { useIdeas } from '../../contexts/IdeasContext';
-import { useToast } from '../../contexts/ToastContext';
 
 interface IdeaCardProps {
     idea: Idea;
@@ -28,18 +27,22 @@ const ScorePill: React.FC<{ label: string, score?: number }> = ({ label, score }
 
 const IdeaCard: React.FC<IdeaCardProps> = ({ idea, onSelect }) => {
     const { deleteIdea } = useIdeas();
-    const { showToast } = useToast();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-    const handleDelete = (e: React.MouseEvent) => {
+    const handleDelete = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!showDeleteConfirm) {
             setShowDeleteConfirm(true);
             return;
         }
         
-        deleteIdea(idea.id);
-        showToast('Idée supprimée avec succès', 'success');
+        try {
+            await deleteIdea(idea.id);
+            // Le toast est déjà géré dans IdeasContext
+        } catch (error) {
+            console.error('Error deleting idea:', error);
+            // Le toast d'erreur est déjà géré dans IdeasContext
+        }
         setShowDeleteConfirm(false);
     };
 
@@ -48,8 +51,15 @@ const IdeaCard: React.FC<IdeaCardProps> = ({ idea, onSelect }) => {
         setShowDeleteConfirm(false);
     };
 
+    const handleCardClick = () => {
+        onSelect();
+    };
+
     return (
-        <Card className="flex flex-col justify-between hover:shadow-xl hover:border-brand transition-all cursor-pointer h-full group relative overflow-hidden">
+        <Card 
+            className="flex flex-col justify-between hover:shadow-xl hover:border-brand transition-all cursor-pointer h-full group relative overflow-hidden"
+            onClick={handleCardClick}
+        >
             {/* Gradient overlay on hover */}
             <div className="absolute inset-0 bg-gradient-to-br from-brand/0 to-brand/0 group-hover:from-brand/5 group-hover:to-transparent transition-all duration-300 pointer-events-none"></div>
             

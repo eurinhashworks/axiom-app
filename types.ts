@@ -1,13 +1,26 @@
 // Fix: Create types.ts to define shared data structures.
 export type IdeaStatus = 'DRAFT' | 'ANALYZING' | 'ANALYZED' | 'EVALUATED' | 'ROADMAP_GENERATED';
 
+export interface ClarifyingQuestion {
+    question: string;
+    options: string[];
+    explanation?: string; // Explique pourquoi cette question est importante
+}
+
 export interface IdeaAnalysis {
     problemUrgency: any;
     targetAudience: any;
     competitionLevel: any;
     summary: string;
-    clarifyingQuestions: string[];
+    clarifyingQuestions: string[] | ClarifyingQuestion[]; // Support ancien et nouveau format
     potentialRisks: string[];
+}
+
+export interface TechRecommendation {
+    category: string; // 'Frontend', 'Backend', 'Database', 'Infrastructure', 'Tooling'
+    name: string;
+    reason: string; // Pourquoi cette technologie est recommandée
+    difficulty: 'easy' | 'medium' | 'hard'; // Complexité d'apprentissage
 }
 
 export interface IdeaEvaluation {
@@ -25,11 +38,20 @@ export interface IdeaEvaluation {
     competitiveAdvantage: number;
     personalAlignment: number;
     technicalFeasibility: number;
+    recommendedTechnologies?: TechRecommendation[];
+    recommendedDatabases?: TechRecommendation[];
 }
 
 export interface RoadmapStep {
     text: string;
     completed: boolean;
+}
+
+export interface ClarifyingQuestionAnswer {
+    questionIndex: number;
+    question: string;
+    selectedOption: string;
+    timestamp: number;
 }
 
 export interface Idea {
@@ -46,4 +68,19 @@ export interface Idea {
     roadmapSteps?: RoadmapStep[];
     opportunityScore?: number;
     feasibilityScore?: number;
+    isPublic?: boolean;
+    authorId?: string;
+    authorName?: string;
+    authorPhotoURL?: string;
+    clarifyingAnswers?: ClarifyingQuestionAnswer[]; // Réponses aux questions du quiz
+}
+
+export interface Comment {
+    id: string;
+    ideaId: string;
+    userId: string;
+    userName: string;
+    userPhotoURL?: string;
+    content: string;
+    createdAt: number;
 }
