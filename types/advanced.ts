@@ -72,6 +72,9 @@ export interface CriteriaWeights {
 
 export interface UserProfile {
   userId: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
   preferences: UserPreferences;
   industryFocus: string[];
   pastIdeaOutcomes: IdeaOutcome[];

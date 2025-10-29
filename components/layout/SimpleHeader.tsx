@@ -1,6 +1,6 @@
 import React from 'react';
 import { useIdeas } from '../../contexts/IdeasContext';
-import ThemeToggle from '../ui/ThemeToggle';
+import UserMenu from '../auth/UserMenu';
 
 const SimpleHeader: React.FC = () => {
     const { activeIdea, setActiveIdea } = useIdeas();
@@ -22,7 +22,7 @@ const SimpleHeader: React.FC = () => {
                          </div>
                     )}
                 </div>
-                <ThemeToggle />
+                <UserMenu />
             </div>
         </header>
     );

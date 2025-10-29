@@ -78,13 +78,51 @@ export class FirebaseService {
     return null;
   }
 
-  async saveUserProfile(userId: string, profile: UserProfile): Promise<void> {
+  async saveUserProfile(userId: string, profile: Partial<UserProfile> & { userId: string }): Promise<void> {
     const profileRef = doc(this.userProfilesCollection, userId);
-    await setDoc(profileRef, {
+    const existingProfile = await getDoc(profileRef);
+    
+    const profileData: any = {
       ...profile,
       userId,
       lastUpdated: Timestamp.now()
-    });
+    };
+
+    // Si le profil existe déjà, on merge seulement les nouvelles données
+    if (existingProfile.exists()) {
+      const existingData = existingProfile.data();
+      await setDoc(profileRef, {
+        ...existingData,
+        ...profileData
+      }, { merge: true });
+    } else {
+      // Créer un nouveau profil avec les valeurs par défaut
+      await setDoc(profileRef, {
+        preferences: {
+          riskTolerance: 'medium',
+          innovationLevel: 'incremental',
+          preferredIndustries: [],
+          opportunityWeights: {
+            marketSize: 0.3,
+            problemUrgency: 0.25,
+            targetAudience: 0.2,
+            competition: 0.15,
+            timing: 0.1
+          },
+          feasibilityWeights: {
+            technical: 0.3,
+            financial: 0.25,
+            resources: 0.2,
+            timeline: 0.15,
+            expertise: 0.1
+          },
+          timeHorizon: 'medium'
+        },
+        industryFocus: [],
+        pastIdeaOutcomes: [],
+        ...profileData
+      });
+    }
   }
 
   async getUserProfile(userId: string): Promise<UserProfile | null> {
