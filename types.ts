@@ -78,6 +78,7 @@ export interface Idea {
     tags?: string[];
     userId: string;
     updatedAt: number;
+    likeCount?: number; // Nombre total de likes (pour éviter de charger tous les likes)
 }
 
 export interface Comment {
@@ -87,5 +88,12 @@ export interface Comment {
     userName: string;
     userPhotoURL?: string;
     content: string;
+    createdAt: number;
+}
+
+export interface Like {
+    id: string;
+    ideaId: string;
+    userId: string;
     createdAt: number;
 }

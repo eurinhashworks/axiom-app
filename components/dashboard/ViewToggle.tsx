@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '../ui/Button';
 
-export type ViewMode = 'grid' | 'kanban' | 'compact' | 'detail';
+export type ViewMode = 'grid' | 'compact' | 'detail';
 
 interface ViewToggleProps {
     currentView: ViewMode;
@@ -11,7 +11,6 @@ interface ViewToggleProps {
 const ViewToggle: React.FC<ViewToggleProps> = ({ currentView, onViewChange }) => {
     const views = [
         { id: 'grid' as ViewMode, label: 'Grille', icon: '⊞' },
-        { id: 'kanban' as ViewMode, label: 'Kanban', icon: '▦' },
         { id: 'compact' as ViewMode, label: 'Compact', icon: '☰' },
         { id: 'detail' as ViewMode, label: 'Détail', icon: '☷' }
     ];

@@ -77,6 +77,57 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid;
     }
     
+    // Collection des likes
+    match /likes/{likeId} {
+      // Lecture : tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      
+      // Création : utilisateur authentifié peut créer un like
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Suppression : seulement l'auteur du like
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Pas de mise à jour pour les likes (on ne peut que créer/supprimer)
+    }
+    
+    // Collection des posts du forum
+    match /forumPosts/{postId} {
+      // Lecture : tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      
+      // Création : utilisateur authentifié peut créer un post
+      allow create: if isAuthenticated() && 
+        request.resource.data.authorId == request.auth.uid;
+      
+      // Mise à jour : seulement l'auteur du post
+      allow update: if isAuthenticated() && 
+        resource.data.authorId == request.auth.uid &&
+        request.resource.data.authorId == request.auth.uid;
+      
+      // Suppression : seulement l'auteur du post
+      allow delete: if isAuthenticated() && 
+        resource.data.authorId == request.auth.uid;
+    }
+    
+    // Collection des likes du forum
+    match /forumLikes/{likeId} {
+      // Lecture : tous les utilisateurs authentifiés
+      allow read: if isAuthenticated();
+      
+      // Création : utilisateur authentifié peut créer un like
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Suppression : seulement l'auteur du like
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Pas de mise à jour pour les likes (on ne peut que créer/supprimer)
+    }
+    
     // Collection des analyses de marché
     match /marketAnalysis/{analysisId} {
       allow read, write: if isAuthenticated();
@@ -100,6 +151,36 @@ service cloud.firestore {
     // Collection des résultats d'idées
     match /ideaOutcomes/{outcomeId} {
       allow read, write: if isAuthenticated();
+    }
+    
+    // Collection des commentaires
+    match /comments/{commentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Collection des likes
+    match /likes/{likeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Collection des posts du forum
+    match /forumPosts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.authorId;
+    }
+    
+    // Collection des likes du forum
+    match /forumLikes/{likeId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
   }
 }

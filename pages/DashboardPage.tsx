@@ -12,7 +12,6 @@ import GraphView from '../components/dashboard/GraphView';
 import AdvancedFilters, { FilterState } from '../components/dashboard/AdvancedFilters';
 import ViewToggle, { ViewMode } from '../components/dashboard/ViewToggle';
 import QuickActions from '../components/dashboard/QuickActions';
-import KanbanView from '../components/dashboard/KanbanView';
 import CompactView from '../components/dashboard/CompactView';
 import DetailView from '../components/dashboard/DetailView';
 import PriorityTimeline from '../components/dashboard/PriorityTimeline';
@@ -20,6 +19,7 @@ import { prioritizationService, PrioritizedIdea } from '../services/prioritizati
 import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import { useToast } from '../contexts/ToastContext';
+import CommentDebug from '../components/debug/CommentDebug';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
@@ -33,6 +33,7 @@ const DashboardPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<SortOption>('date-desc');
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [selectedIdeas, setSelectedIdeas] = useState<Set<string>>(new Set());
+    const [showPriorityTimeline, setShowPriorityTimeline] = useState(false);
     const [filters, setFilters] = useState<FilterState>({
         status: 'all',
         minOpportunity: 0,
@@ -58,10 +59,6 @@ const DashboardPage: React.FC = () => {
     };
 
     const handleSelectIdea = (idea: Idea) => {
-        setSelectedIdea(idea);
-    };
-
-    const handleSelectPrioritizedIdea = (idea: PrioritizedIdea) => {
         setSelectedIdea(idea);
     };
 
@@ -377,15 +374,30 @@ const DashboardPage: React.FC = () => {
 
             {evaluatedIdeas.length > 0 && <GraphView ideas={evaluatedIdeas} onSelectIdea={handleSelectIdea} />}
 
+            {/* Timeline de priorité */}
+            {showPriorityTimeline && prioritizationData.length > 0 && (
+                <div className="mt-8">
+                    <h2 className="text-2xl font-bold mb-4">Timeline des Priorités</h2>
+                    <PriorityTimeline 
+                        prioritizedIdeas={prioritizationData}
+                        timeline={[]}
+                        recommendations={{
+                            immediate: prioritizationData.slice(0, 3),
+                            thisWeek: prioritizationData.slice(3, 6),
+                            thisMonth: prioritizationData.slice(6, 10),
+                            later: prioritizationData.slice(10)
+                        }}
+                        onSelectIdea={handleSelectPrioritizedIdea}
+                    />
+                </div>
+            )}
+
             <h2 className="text-2xl font-bold mt-8">Toutes les idées</h2>
+            
+            {/* Debug des commentaires - à supprimer après résolution */}
+            <CommentDebug />
             {filteredAndSortedIdeas.length > 0 ? (
                 <>
-                    {viewMode === 'kanban' && (
-                        <KanbanView 
-                            ideas={filteredAndSortedIdeas} 
-                            onSelectIdea={handleSelectIdea} 
-                        />
-                    )}
                     {viewMode === 'compact' && (
                         <CompactView 
                             ideas={filteredAndSortedIdeas} 

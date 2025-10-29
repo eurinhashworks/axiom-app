@@ -6,20 +6,20 @@ import Button from '../ui/Button';
 
 const SimpleHeader: React.FC = () => {
     const { activeIdea, setActiveIdea, syncing } = useIdeas();
-    const [currentView, setCurrentView] = useState<'dashboard' | 'explore' | 'profile'>(() => {
+    const [currentView, setCurrentView] = useState<'dashboard' | 'profile' | 'forum'>(() => {
         const hash = window.location.hash;
-        if (hash === '#explore') return 'explore';
         if (hash === '#profile') return 'profile';
+        if (hash === '#forum') return 'forum';
         return 'dashboard';
     });
 
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash;
-            if (hash === '#explore') {
-                setCurrentView('explore');
-            } else if (hash === '#profile') {
+            if (hash === '#profile') {
                 setCurrentView('profile');
+            } else if (hash === '#forum') {
+                setCurrentView('forum');
             } else {
                 setCurrentView('dashboard');
             }
@@ -35,11 +35,6 @@ const SimpleHeader: React.FC = () => {
         window.location.hash = '#dashboard';
     };
 
-    const handleNavigateToExplore = () => {
-        setActiveIdea(null);
-        setCurrentView('explore');
-        window.location.hash = '#explore';
-    };
 
     const handleNavigateToDashboard = () => {
         setActiveIdea(null);
@@ -51,6 +46,12 @@ const SimpleHeader: React.FC = () => {
         setActiveIdea(null);
         setCurrentView('profile');
         window.location.hash = '#profile';
+    };
+
+    const handleNavigateToForum = () => {
+        setActiveIdea(null);
+        setCurrentView('forum');
+        window.location.hash = '#forum';
     };
 
     const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
@@ -83,11 +84,11 @@ const SimpleHeader: React.FC = () => {
                                     Mes Idées
                                 </Button>
                                 <Button
-                                    variant={currentView === 'explore' ? 'primary' : 'secondary'}
-                                    onClick={handleNavigateToExplore}
+                                    variant={currentView === 'forum' ? 'primary' : 'secondary'}
+                                    onClick={handleNavigateToForum}
                                     className="text-sm"
                                 >
-                                    Explorer
+                                    Forum
                                 </Button>
                                 <Button
                                     variant={currentView === 'profile' ? 'primary' : 'secondary'}
@@ -139,14 +140,14 @@ const SimpleHeader: React.FC = () => {
                         Mes Idées
                     </Button>
                     <Button
-                        variant={currentView === 'explore' ? 'primary' : 'secondary'}
+                        variant={currentView === 'forum' ? 'primary' : 'secondary'}
                         onClick={() => {
-                            handleNavigateToExplore();
+                            handleNavigateToForum();
                             setMobileMenuOpen(false);
                         }}
                         className="w-full justify-start text-sm"
                     >
-                        Explorer
+                        Forum
                     </Button>
                     <Button
                         variant={currentView === 'profile' ? 'primary' : 'secondary'}

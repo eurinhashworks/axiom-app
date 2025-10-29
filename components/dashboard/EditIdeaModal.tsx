@@ -4,6 +4,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { useIdeas } from '../../contexts/IdeasContext';
 import { useToast } from '../../contexts/ToastContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface EditIdeaModalProps {
     idea: Idea;
@@ -14,14 +15,17 @@ interface EditIdeaModalProps {
 const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) => {
     const { updateIdea } = useIdeas();
     const { showToast } = useToast();
+    const { user } = useAuth();
     const [title, setTitle] = useState(idea.title);
     const [brainDump, setBrainDump] = useState(idea.brainDump);
+    const [isPublic, setIsPublic] = useState(idea.isPublic || false);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
             setTitle(idea.title);
             setBrainDump(idea.brainDump);
+            setIsPublic(idea.isPublic || false);
         }
     }, [isOpen, idea]);
 
@@ -34,8 +38,16 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
         setIsSaving(true);
         try {
             const updates: Partial<Idea> = { 
-                title: title.trim()
+                title: title.trim(),
+                isPublic: isPublic
             };
+
+            // Si on publie, ajouter les informations d'auteur
+            if (isPublic && user) {
+                updates.authorId = user.uid;
+                updates.authorName = user.displayName || 'Utilisateur anonyme';
+                updates.authorPhotoURL = user.photoURL || null;
+            }
 
             // Si le brain dump a changé, réinitialiser l'analyse
             if (brainDump.trim() !== idea.brainDump.trim()) {
@@ -50,7 +62,14 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
             }
 
             await updateIdea(idea.id, updates);
-            showToast('Idée modifiée avec succès', 'success');
+            showToast(
+                isPublic !== idea.isPublic
+                    ? isPublic
+                        ? 'Idée publiée et modifiée avec succès !' 
+                        : 'Idée retirée de la publication et modifiée avec succès.'
+                    : 'Idée modifiée avec succès',
+                'success'
+            );
             onClose();
         } catch (error) {
             console.error('Error updating idea:', error);
@@ -60,7 +79,7 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
         }
     };
 
-    const hasChanges = title !== idea.title || brainDump !== idea.brainDump;
+    const hasChanges = title !== idea.title || brainDump !== idea.brainDump || isPublic !== (idea.isPublic || false);
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Modifier l'idée">
@@ -101,6 +120,30 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
                             </p>
                         </div>
                     )}
+                </div>
+
+                {/* Toggle public/privé */}
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border">
+                    <div className="flex-1">
+                        <label htmlFor="edit-public" className="block text-xs sm:text-sm font-medium mb-1">
+                            Visibilité
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                            {isPublic 
+                                ? 'Cette idée est visible publiquement et peut être explorée par d\'autres utilisateurs.'
+                                : 'Cette idée est privée et visible uniquement par vous.'}
+                        </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer ml-4">
+                        <input
+                            type="checkbox"
+                            id="edit-public"
+                            checked={isPublic}
+                            onChange={(e) => setIsPublic(e.target.checked)}
+                            className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-brand/20 dark:peer-focus:ring-brand/40 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
+                    </label>
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t border-border">

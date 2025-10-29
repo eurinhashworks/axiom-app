@@ -12,10 +12,10 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, className = '', size = 'medium' }) => {
   const sizeClasses = {
-    small: 'max-w-sm',
-    medium: 'max-w-md',
-    large: 'max-w-4xl',
-    full: 'max-w-7xl'
+    small: 'max-w-sm w-full',
+    medium: 'max-w-2xl w-full',
+    large: 'max-w-4xl w-full',
+    full: 'max-w-6xl w-full'
   };
   const modalRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -86,7 +86,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, classNa
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in p-2 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-start z-50 animate-fade-in p-4 sm:p-8 overflow-y-auto"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -94,7 +94,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, classNa
     >
       <Card
         ref={modalRef}
-        className={`w-full max-w-full ${sizeClasses[size]} transform transition-all animate-scale-in my-auto ${className}`}
+        className={`${sizeClasses[size]} transform transition-all animate-scale-in my-8 mx-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >

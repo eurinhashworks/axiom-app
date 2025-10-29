@@ -16,7 +16,7 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Idea, Comment } from '../types';
+import { Idea, Comment, Like } from '../types';
 import { 
   MarketAnalysis, 
   UserProfile, 
@@ -32,6 +32,9 @@ export class FirebaseService {
   private feedbackCollection = collection(db, 'feedback');
   private trainingDataCollection = collection(db, 'trainingData');
   private commentsCollection = collection(db, 'comments');
+  private likesCollection = collection(db, 'likes');
+  private forumPostsCollection = collection(db, 'forumPosts');
+  private forumLikesCollection = collection(db, 'forumLikes');
 
   /**
    * Nettoie un objet en supprimant toutes les valeurs undefined
@@ -124,7 +127,7 @@ export class FirebaseService {
     });
   }
 
-  subscribeToIdeas(userId: string, callback: (ideas: Idea[]) => void): Unsubscribe {
+    subscribeToIdeas(userId: string, callback: (ideas: Idea[]) => void): Unsubscribe {
     const q = query(this.ideasCollection, where('userId', '==', userId), orderBy('createdAt', 'desc'));
     
     return onSnapshot(q, (snapshot) => {
@@ -144,7 +147,11 @@ export class FirebaseService {
           evaluation: data.evaluation,
           roadmapSteps: data.roadmapSteps,
           opportunityScore: data.opportunityScore,
-          feasibilityScore: data.feasibilityScore
+          feasibilityScore: data.feasibilityScore,
+          isPublic: data.isPublic || false,
+          authorId: data.authorId,
+          authorName: data.authorName,
+          authorPhotoURL: data.authorPhotoURL
         } as Idea;
       });
       callback(ideas);
@@ -560,17 +567,36 @@ export class FirebaseService {
   // Méthodes pour les commentaires
   async addComment(ideaId: string, userId: string, userName: string, userPhotoURL: string | null, content: string): Promise<string> {
     const commentRef = doc(this.commentsCollection);
-    const commentData = {
+    const commentData: any = {
       ideaId,
       userId,
       userName,
-      userPhotoURL: userPhotoURL || null,
       content: content.trim(),
       createdAt: Timestamp.now()
     };
 
-    await setDoc(commentRef, this.cleanFirestoreData(commentData));
-    return commentRef.id;
+    // Ajouter userPhotoURL seulement s'il n'est pas null
+    if (userPhotoURL) {
+      commentData.userPhotoURL = userPhotoURL;
+    }
+
+    const cleanData = this.cleanFirestoreData(commentData);
+
+    try {
+      await setDoc(commentRef, cleanData);
+      return commentRef.id;
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  }
+
+  async updateComment(commentId: string, content: string): Promise<void> {
+    const commentRef = doc(this.commentsCollection, commentId);
+    await setDoc(commentRef, {
+      content: content.trim(),
+      updatedAt: Timestamp.now()
+    }, { merge: true });
   }
 
   async getComments(ideaId: string): Promise<Comment[]> {
@@ -627,6 +653,176 @@ export class FirebaseService {
   async deleteComment(commentId: string): Promise<void> {
     const commentRef = doc(this.commentsCollection, commentId);
     await deleteDoc(commentRef);
+  }
+
+  // Méthodes pour les likes
+  async toggleLike(ideaId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+    // Vérifier si l'utilisateur a déjà liké cette idée
+    const likeQuery = query(
+      this.likesCollection,
+      where('ideaId', '==', ideaId),
+      where('userId', '==', userId)
+    );
+    const likeSnapshot = await getDocs(likeQuery);
+
+    if (!likeSnapshot.empty) {
+      // Supprimer le like
+      const likeDoc = likeSnapshot.docs[0];
+      await deleteDoc(doc(this.likesCollection, likeDoc.id));
+    } else {
+      // Ajouter un nouveau like
+      const likeRef = doc(this.likesCollection);
+      const likeData = {
+        ideaId,
+        userId,
+        createdAt: Timestamp.now()
+      };
+      await setDoc(likeRef, this.cleanFirestoreData(likeData));
+    }
+
+    // Mettre à jour le compteur de likes dans l'idée
+    const allLikesQuery = query(
+      this.likesCollection,
+      where('ideaId', '==', ideaId)
+    );
+    const allLikesSnapshot = await getDocs(allLikesQuery);
+    const likeCount = allLikesSnapshot.size;
+
+    // Mettre à jour le likeCount dans l'idée
+    const ideaRef = doc(this.ideasCollection, ideaId);
+    await setDoc(ideaRef, { likeCount }, { merge: true });
+
+    return {
+      liked: likeSnapshot.empty, // Si c'était vide, maintenant c'est liké
+      likeCount
+    };
+  }
+
+  async hasUserLiked(ideaId: string, userId: string): Promise<boolean> {
+    const likeQuery = query(
+      this.likesCollection,
+      where('ideaId', '==', ideaId),
+      where('userId', '==', userId)
+    );
+    const likeSnapshot = await getDocs(likeQuery);
+    return !likeSnapshot.empty;
+  }
+
+  async getLikeCount(ideaId: string): Promise<number> {
+    const likeQuery = query(
+      this.likesCollection,
+      where('ideaId', '==', ideaId)
+    );
+    const likeSnapshot = await getDocs(likeQuery);
+    return likeSnapshot.size;
+  }
+
+  subscribeToLikes(ideaId: string, userId: string | null, callback: (likeCount: number, hasLiked: boolean) => void): Unsubscribe {
+    const likeQuery = query(
+      this.likesCollection,
+      where('ideaId', '==', ideaId)
+    );
+
+    return onSnapshot(likeQuery, async (snapshot) => {
+      const likeCount = snapshot.size;
+      let hasLiked = false;
+
+      if (userId) {
+        hasLiked = snapshot.docs.some(doc => doc.data().userId === userId);
+      }
+
+      callback(likeCount, hasLiked);
+    }, (error: any) => {
+      if (error.code === 'unavailable' || error.message?.includes('offline')) {
+        return;
+      }
+      console.error('Error subscribing to likes:', error);
+    });
+  }
+
+  // ===== MÉTHODES FORUM =====
+
+  async createForumPost(postData: any): Promise<void> {
+    const docRef = doc(this.forumPostsCollection);
+    const cleanData = this.cleanFirestoreData({
+      ...postData,
+      id: docRef.id,
+      createdAt: Timestamp.fromMillis(postData.createdAt),
+      updatedAt: Timestamp.fromMillis(postData.updatedAt)
+    });
+    
+    await setDoc(docRef, cleanData);
+  }
+
+  async getForumPosts(): Promise<any[]> {
+    const q = query(
+      this.forumPostsCollection,
+      orderBy('createdAt', 'desc')
+    );
+    
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toMillis() || 0,
+        updatedAt: data.updatedAt?.toMillis() || 0
+      };
+    });
+  }
+
+  async toggleForumPostLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+    const likeDocRef = doc(this.forumLikesCollection, `${postId}_${userId}`);
+    const likeDoc = await getDoc(likeDocRef);
+    
+    if (likeDoc.exists()) {
+      // Supprimer le like
+      await deleteDoc(likeDocRef);
+    } else {
+      // Ajouter le like
+      await setDoc(likeDocRef, {
+        postId,
+        userId,
+        createdAt: Timestamp.now()
+      });
+    }
+
+    // Compter les likes
+    const likesQuery = query(this.forumLikesCollection, where('postId', '==', postId));
+    const likesSnapshot = await getDocs(likesQuery);
+    const likeCount = likesSnapshot.size;
+
+    // Mettre à jour le compteur de likes sur le post
+    const postDocRef = doc(this.forumPostsCollection, postId);
+    await setDoc(postDocRef, { likes: likeCount }, { merge: true });
+
+    return {
+      liked: !likeDoc.exists(),
+      likeCount
+    };
+  }
+
+  async updateForumPost(postId: string, title: string, content: string): Promise<void> {
+    const postDocRef = doc(this.forumPostsCollection, postId);
+    await setDoc(postDocRef, {
+      title: title.trim(),
+      content: content.trim(),
+      updatedAt: Timestamp.now()
+    }, { merge: true });
+  }
+
+  async deleteForumPost(postId: string): Promise<void> {
+    const postDocRef = doc(this.forumPostsCollection, postId);
+    
+    // Supprimer tous les likes associés
+    const likesQuery = query(this.forumLikesCollection, where('postId', '==', postId));
+    const likesSnapshot = await getDocs(likesQuery);
+    const deleteLikesPromises = likesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deleteLikesPromises);
+    
+    // Supprimer le post
+    await deleteDoc(postDocRef);
   }
 }
 

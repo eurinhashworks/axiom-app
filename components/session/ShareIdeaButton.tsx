@@ -36,7 +36,7 @@ const ShareIdeaButton: React.FC<ShareIdeaButtonProps> = ({ idea }) => {
   };
 
   const handleCopyLink = async () => {
-    const shareUrl = `${window.location.origin}/#explore?idea=${idea.id}`;
+    const shareUrl = `${window.location.origin}/#dashboard?idea=${idea.id}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopySuccess(true);
@@ -78,7 +78,7 @@ const ShareIdeaButton: React.FC<ShareIdeaButtonProps> = ({ idea }) => {
             {idea.isPublic ? (
               <>Cette idée est actuellement <strong>publique</strong> et visible par tous les utilisateurs d'AXIOM.</>
             ) : (
-              <>En rendant cette idée <strong>publique</strong>, elle sera visible par tous les utilisateurs de la plateforme et pourra être explorée dans la section "Explorer".</>
+              <>En rendant cette idée <strong>publique</strong>, elle sera visible par tous les utilisateurs de la plateforme.</>
             )}
           </p>
 
@@ -110,7 +110,7 @@ const ShareIdeaButton: React.FC<ShareIdeaButtonProps> = ({ idea }) => {
                 <input
                   type="text"
                   readOnly
-                  value={`${window.location.origin}/#explore?idea=${idea.id}`}
+                  value={`${window.location.origin}/#dashboard?idea=${idea.id}`}
                   className="flex-1 px-3 py-2 border border-border rounded-md bg-muted text-foreground text-sm"
                 />
                 <Button
