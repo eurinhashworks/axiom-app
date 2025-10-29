@@ -68,9 +68,9 @@ const QuickActions: React.FC<QuickActionsProps> = ({ idea, onAction }) => {
   if (actions.length === 0) return null;
 
   return (
-    <Card className="p-4">
+    <Card className="p-3 sm:p-4">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-sm font-semibold text-muted-foreground">Actions rapides</span>
+        <span className="text-xs sm:text-sm font-semibold text-muted-foreground">Actions rapides</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {actions.map((action, index) => (
@@ -78,10 +78,11 @@ const QuickActions: React.FC<QuickActionsProps> = ({ idea, onAction }) => {
             key={index}
             variant={action.variant}
             onClick={() => onAction(action.action)}
-            className="text-xs"
+            className="text-xs flex-1 sm:flex-initial min-w-[100px]"
           >
             <span className="mr-1">{action.icon}</span>
-            {action.label}
+            <span className="hidden sm:inline">{action.label}</span>
+            <span className="sm:hidden">{action.label.split(' ')[0]}</span>
           </Button>
         ))}
       </div>

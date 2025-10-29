@@ -81,6 +81,73 @@
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 150ms;
         }
+        
+        /* Mobile responsive improvements */
+        @media (max-width: 640px) {
+            html {
+                scroll-behavior: smooth;
+            }
+            
+            /* Better touch targets */
+            button, a {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            body {
+                overflow-x: hidden;
+            }
+        }
+        
+        /* Scrollbar styling */
+        .scrollbar-thin {
+            scrollbar-width: thin;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar {
+            height: 6px;
+            width: 6px;
+        }
+        
+        .scrollbar-thumb-border::-webkit-scrollbar-thumb {
+            background-color: hsl(var(--border));
+            border-radius: 3px;
+        }
+        
+        .scrollbar-track-transparent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        /* Snap scrolling */
+        .snap-x {
+            scroll-snap-type: x mandatory;
+        }
+        
+        .snap-start {
+            scroll-snap-align: start;
+        }
+        
+        /* Line clamp utilities */
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
     <script>
         tailwind.config = {

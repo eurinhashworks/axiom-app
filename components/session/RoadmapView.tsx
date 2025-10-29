@@ -42,13 +42,13 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
 
     return (
         <Card className="animate-fade-in">
-            <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold">Feuille de Route Interactive</h3>
-                <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <h3 className="text-lg sm:text-xl font-semibold">Feuille de Route Interactive</h3>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                         {completedSteps} / {totalSteps} complétées
                     </span>
-                    <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className="flex-1 sm:flex-initial w-full sm:w-24 h-2 bg-muted rounded-full overflow-hidden">
                         <div 
                             className="h-full bg-brand transition-all duration-300"
                             style={{ width: `${progressPercentage}%` }}
@@ -80,13 +80,13 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
             </div>
 
             {/* Actions post-roadmap */}
-            <div className="pt-6 border-t border-border">
-                <div className="flex flex-wrap gap-3 justify-between items-center">
-                    <div className="flex flex-wrap gap-2">
+            <div className="pt-4 sm:pt-6 border-t border-border">
+                <div className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center">
+                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Button
                             variant="secondary"
                             onClick={handleReturnToDashboard}
-                            className="text-sm"
+                            className="text-sm w-full sm:w-auto"
                         >
                             Retour au Dashboard
                         </Button>
@@ -97,14 +97,14 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
                                 // Scroller vers le haut pour voir le bouton "Nouvelle Idée"
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
-                            className="text-sm"
+                            className="text-sm w-full sm:w-auto"
                         >
                             Créer une Nouvelle Idée
                         </Button>
                         <Button
                             variant="secondary"
                             onClick={() => setIsExportOpen(true)}
-                            className="text-sm"
+                            className="text-sm w-full sm:w-auto"
                         >
                             <svg className="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -113,8 +113,8 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
                         </Button>
                     </div>
                     {progressPercentage === 100 && (
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mt-3 sm:mt-0 w-full sm:w-auto justify-center sm:justify-start">
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span className="font-semibold text-sm">Roadmap complétée !</span>

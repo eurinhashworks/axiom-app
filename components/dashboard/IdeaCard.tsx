@@ -3,10 +3,15 @@ import { Idea } from '../../types';
 import Card from '../ui/Card';
 import StatusBadge from './StatusBadge';
 import { useIdeas } from '../../contexts/IdeasContext';
+import { prioritizationService } from '../../services/prioritizationService';
 
 interface IdeaCardProps {
     idea: Idea;
     onSelect: () => void;
+    compact?: boolean;
+    showSelection?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: () => void;
 }
 
 const ScorePill: React.FC<{ label: string, score?: number }> = ({ label, score }) => {
@@ -25,7 +30,14 @@ const ScorePill: React.FC<{ label: string, score?: number }> = ({ label, score }
     )
 };
 
-const IdeaCard: React.FC<IdeaCardProps> = ({ idea, onSelect }) => {
+const IdeaCard: React.FC<IdeaCardProps> = ({ 
+    idea, 
+    onSelect, 
+    compact = false, 
+    showSelection = false,
+    isSelected = false,
+    onToggleSelection 
+}) => {
     const { deleteIdea } = useIdeas();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 

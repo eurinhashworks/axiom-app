@@ -86,7 +86,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, classNa
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fade-in p-2 sm:p-4 overflow-y-auto"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -94,7 +94,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title, classNa
     >
       <Card
         ref={modalRef}
-        className={`w-full ${sizeClasses[size]} transform transition-all animate-scale-in ${className}`}
+        className={`w-full max-w-full ${sizeClasses[size]} transform transition-all animate-scale-in my-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
         tabIndex={-1}
       >

@@ -342,8 +342,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ idea, onClose }) => {
 
                 {/* Sélecteur de format */}
                 <div className="mb-4 flex-shrink-0">
-                    <label className="block text-sm font-medium mb-2">Format d'export</label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                    <label className="block text-xs sm:text-sm font-medium mb-2">Format d'export</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                         <button
                             onClick={() => setExportFormat('markdown')}
                             className={`px-3 py-2 rounded-md text-sm transition-all ${

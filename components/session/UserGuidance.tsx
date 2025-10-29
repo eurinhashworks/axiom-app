@@ -91,14 +91,14 @@ const UserGuidance: React.FC<UserGuidanceProps> = ({ idea, onAction }) => {
   if (!guidance) return null;
 
   return (
-    <Card className="mb-6 border-brand/20 bg-gradient-to-br from-brand/5 to-transparent">
-      <div className="space-y-4">
+    <Card className="mb-4 sm:mb-6 border-brand/20 bg-gradient-to-br from-brand/5 to-transparent p-4 sm:p-6">
+      <div className="space-y-3 sm:space-y-4">
         <div>
-          <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
-            <span className="w-2 h-2 bg-brand rounded-full animate-pulse"></span>
-            {guidance.title}
+          <h3 className="text-base sm:text-lg font-semibold mb-2 flex items-center gap-2">
+            <span className="w-2 h-2 bg-brand rounded-full animate-pulse flex-shrink-0"></span>
+            <span className="break-words">{guidance.title}</span>
           </h3>
-          <p className="text-sm text-muted-foreground">{guidance.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">{guidance.description}</p>
         </div>
 
         {guidance.tips && guidance.tips.length > 0 && (
@@ -107,8 +107,8 @@ const UserGuidance: React.FC<UserGuidanceProps> = ({ idea, onAction }) => {
             <ul className="space-y-1">
               {guidance.tips.map((tip, index) => (
                 <li key={index} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-brand mt-0.5">•</span>
-                  <span>{tip}</span>
+                  <span className="text-brand mt-0.5 flex-shrink-0">•</span>
+                  <span className="break-words">{tip}</span>
                 </li>
               ))}
             </ul>
@@ -116,13 +116,13 @@ const UserGuidance: React.FC<UserGuidanceProps> = ({ idea, onAction }) => {
         )}
 
         {guidance.actions.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-2">
             {guidance.actions.map((action, index) => (
               <Button
                 key={index}
                 variant={action.variant}
                 onClick={() => onAction?.(action.action)}
-                className="text-sm"
+                className="text-sm w-full sm:w-auto flex-1 sm:flex-initial"
               >
                 {action.label}
               </Button>

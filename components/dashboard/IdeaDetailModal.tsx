@@ -52,14 +52,14 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Détails de l'idée" size="large">
-            <div className="space-y-6 max-h-[80vh] overflow-y-auto">
+            <div className="space-y-4 sm:space-y-6 max-h-[80vh] overflow-y-auto">
                 {/* En-tête */}
-                <div className="flex justify-between items-start gap-4 pb-4 border-b border-border">
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-bold mb-2">{idea.title}</h2>
-                        <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-border">
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-xl sm:text-2xl font-bold mb-2 break-words">{idea.title}</h2>
+                        <div className="flex flex-wrap items-center gap-2">
                             <StatusBadge status={idea.status} />
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                                 Créée le {new Date(idea.createdAt).toLocaleDateString('fr-FR', {
                                     day: 'numeric',
                                     month: 'long',
@@ -69,12 +69,11 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                         </div>
                     </div>
                     {isOwner && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 w-full sm:w-auto">
                             <Button
                                 variant="secondary"
-                                size="small"
                                 onClick={() => setIsEditing(true)}
-                                className="transition-all hover:scale-105"
+                                className="text-sm w-full sm:w-auto transition-all hover:scale-105"
                             >
                                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -87,11 +86,11 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
 
                 {/* Scores */}
                 {(idea.opportunityScore !== undefined || idea.feasibilityScore !== undefined) && (
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg">
                         {idea.opportunityScore !== undefined && (
                             <div>
-                                <div className="text-sm text-muted-foreground mb-1">Score d'Opportunité</div>
-                                <div className="text-2xl font-bold text-brand">{idea.opportunityScore.toFixed(1)}/10</div>
+                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Score d'Opportunité</div>
+                                <div className="text-xl sm:text-2xl font-bold text-brand">{idea.opportunityScore.toFixed(1)}/10</div>
                                 <div className="w-full bg-background rounded-full h-2 mt-2">
                                     <div 
                                         className="bg-brand h-2 rounded-full transition-all"
@@ -102,8 +101,8 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                         )}
                         {idea.feasibilityScore !== undefined && (
                             <div>
-                                <div className="text-sm text-muted-foreground mb-1">Score de Faisabilité</div>
-                                <div className="text-2xl font-bold text-brand">{idea.feasibilityScore.toFixed(1)}/10</div>
+                                <div className="text-xs sm:text-sm text-muted-foreground mb-1">Score de Faisabilité</div>
+                                <div className="text-xl sm:text-2xl font-bold text-brand">{idea.feasibilityScore.toFixed(1)}/10</div>
                                 <div className="w-full bg-background rounded-full h-2 mt-2">
                                     <div 
                                         className="bg-brand h-2 rounded-full transition-all"
@@ -118,17 +117,17 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                 {/* Résumé de l'analyse */}
                 {idea.analysis?.summary && (
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Résumé de l'analyse</h3>
-                        <p className="text-muted-foreground leading-relaxed">{idea.analysis.summary}</p>
+                        <h3 className="text-base sm:text-lg font-semibold mb-2">Résumé de l'analyse</h3>
+                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{idea.analysis.summary}</p>
                     </div>
                 )}
 
                 {/* Brain Dump */}
                 {idea.brainDump && (
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Brain Dump</h3>
-                        <div className="p-4 bg-muted/30 rounded-lg border border-border">
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                        <h3 className="text-base sm:text-lg font-semibold mb-2">Brain Dump</h3>
+                        <div className="p-3 sm:p-4 bg-muted/30 rounded-lg border border-border">
+                            <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
                                 {idea.brainDump}
                             </p>
                         </div>

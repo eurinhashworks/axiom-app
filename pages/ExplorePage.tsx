@@ -66,33 +66,33 @@ const ExplorePage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-brand to-brand-accent bg-clip-text text-transparent">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-brand to-brand-accent bg-clip-text text-transparent">
             Explorer les Idées
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Découvrez les idées partagées par la communauté AXIOM
             {allPublicIdeas.length > 0 && (
-              <span className="ml-2 text-brand font-semibold">
+              <span className="ml-1 sm:ml-2 text-brand font-semibold">
                 ({allPublicIdeas.length} idées disponibles)
               </span>
             )}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             variant={filter === 'all' ? 'primary' : 'secondary'}
             onClick={() => setFilter('all')}
-            className="text-sm"
+            className="text-sm flex-1 sm:flex-initial"
           >
             Toutes
           </Button>
           <Button
             variant={filter === 'evaluated' ? 'primary' : 'secondary'}
             onClick={() => setFilter('evaluated')}
-            className="text-sm"
+            className="text-sm flex-1 sm:flex-initial"
           >
             Évaluées
           </Button>
@@ -110,16 +110,16 @@ const ExplorePage: React.FC = () => {
         />
       ) : (
         <>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-4 text-xs sm:text-sm text-muted-foreground">
             <span>
               {filteredIdeas.length} idée(s) affichée(s)
               {displayedIdeas.length < allPublicIdeas.length && (
-                <span className="ml-2">sur {allPublicIdeas.length}</span>
+                <span className="ml-1 sm:ml-2">sur {allPublicIdeas.length}</span>
               )}
             </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredIdeas.map(idea => (
               <PublicIdeaCard key={idea.id} idea={idea} onSelect={() => setSelectedIdea(idea)} />
             ))}
@@ -133,7 +133,7 @@ const ExplorePage: React.FC = () => {
                 onClick={handleLoadMore}
                 disabled={loadingMore}
                 isLoading={loadingMore}
-                className="min-w-[200px]"
+                className="w-full sm:w-auto min-w-[200px]"
               >
                 {loadingMore ? 'Chargement...' : 'Charger plus d\'idées'}
               </Button>

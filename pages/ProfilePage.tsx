@@ -52,20 +52,20 @@ const ProfilePage: React.FC = () => {
     if (!user) return null;
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-6 sm:space-y-8 animate-fade-in">
             {/* En-tête du profil */}
-            <Card className="p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <Card className="p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
                     {user.photoURL && (
                         <img
                             src={user.photoURL}
                             alt={user.displayName || 'Utilisateur'}
-                            className="w-20 h-20 rounded-full border-4 border-border"
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-border flex-shrink-0"
                         />
                     )}
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-bold mb-2">{user.displayName || 'Utilisateur'}</h1>
-                        <p className="text-muted-foreground">{user.email}</p>
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{user.displayName || 'Utilisateur'}</h1>
+                        <p className="text-sm sm:text-base text-muted-foreground break-all">{user.email}</p>
                         {user.metadata && user.metadata.creationTime && (
                             <p className="text-sm text-muted-foreground mt-2">
                                 Membre depuis {new Date(user.metadata.creationTime).toLocaleDateString('fr-FR', {
@@ -80,23 +80,23 @@ const ProfilePage: React.FC = () => {
 
             {/* Statistiques */}
             <div>
-                <h2 className="text-2xl font-bold mb-4">Statistiques</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="p-6">
-                        <div className="text-3xl font-bold text-brand mb-1">{stats.totalIdeas}</div>
-                        <div className="text-sm text-muted-foreground">Idées créées</div>
+                <h2 className="text-xl sm:text-2xl font-bold mb-4">Statistiques</h2>
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <Card className="p-4 sm:p-6">
+                        <div className="text-2xl sm:text-3xl font-bold text-brand mb-1">{stats.totalIdeas}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">Idées créées</div>
                     </Card>
-                    <Card className="p-6">
-                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{stats.publicIdeas}</div>
-                        <div className="text-sm text-muted-foreground">Idées publiques</div>
+                    <Card className="p-4 sm:p-6">
+                        <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400 mb-1">{stats.publicIdeas}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">Idées publiques</div>
                     </Card>
-                    <Card className="p-6">
-                        <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{stats.evaluatedIdeas}</div>
-                        <div className="text-sm text-muted-foreground">Idées évaluées</div>
+                    <Card className="p-4 sm:p-6">
+                        <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400 mb-1">{stats.evaluatedIdeas}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">Idées évaluées</div>
                     </Card>
-                    <Card className="p-6">
-                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{stats.roadmapsGenerated}</div>
-                        <div className="text-sm text-muted-foreground">Roadmaps générées</div>
+                    <Card className="p-4 sm:p-6">
+                        <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400 mb-1">{stats.roadmapsGenerated}</div>
+                        <div className="text-xs sm:text-sm text-muted-foreground">Roadmaps générées</div>
                     </Card>
                 </div>
             </div>
@@ -104,24 +104,24 @@ const ProfilePage: React.FC = () => {
             {/* Scores moyens */}
             {stats.avgOpportunity > 0 && (
                 <div>
-                    <h2 className="text-2xl font-bold mb-4">Performances Moyennes</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card className="p-6">
-                            <div className="text-sm text-muted-foreground mb-2">Score d'Opportunité Moyen</div>
-                            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                {stats.avgOpportunity}<span className="text-lg text-muted-foreground">/10</span>
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Performances Moyennes</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <Card className="p-4 sm:p-6">
+                            <div className="text-xs sm:text-sm text-muted-foreground mb-2">Score d'Opportunité Moyen</div>
+                            <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                {stats.avgOpportunity}<span className="text-base sm:text-lg text-muted-foreground">/10</span>
                             </div>
                         </Card>
-                        <Card className="p-6">
-                            <div className="text-sm text-muted-foreground mb-2">Score de Faisabilité Moyen</div>
-                            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                                {stats.avgFeasibility}<span className="text-lg text-muted-foreground">/10</span>
+                        <Card className="p-4 sm:p-6">
+                            <div className="text-xs sm:text-sm text-muted-foreground mb-2">Score de Faisabilité Moyen</div>
+                            <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-400">
+                                {stats.avgFeasibility}<span className="text-base sm:text-lg text-muted-foreground">/10</span>
                             </div>
                         </Card>
-                        <Card className="p-6">
-                            <div className="text-sm text-muted-foreground mb-2">Complétion Moyenne</div>
-                            <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                {stats.avgCompletion}<span className="text-lg text-muted-foreground">%</span>
+                        <Card className="p-4 sm:p-6">
+                            <div className="text-xs sm:text-sm text-muted-foreground mb-2">Complétion Moyenne</div>
+                            <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">
+                                {stats.avgCompletion}<span className="text-base sm:text-lg text-muted-foreground">%</span>
                             </div>
                         </Card>
                     </div>
@@ -131,8 +131,8 @@ const ProfilePage: React.FC = () => {
             {/* Idées publiques */}
             {publicIdeas.length > 0 && (
                 <div>
-                    <h2 className="text-2xl font-bold mb-4">Mes Idées Publiques</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4">Mes Idées Publiques</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {publicIdeas.map(idea => (
                             <IdeaCard key={idea.id} idea={idea} onSelect={() => setActiveIdea(idea)} />
                         ))}

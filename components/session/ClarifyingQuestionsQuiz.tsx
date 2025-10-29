@@ -93,13 +93,13 @@ const ClarifyingQuestionsQuiz: React.FC<ClarifyingQuestionsQuizProps> = ({ idea,
     const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
     return (
-        <Card className="max-w-3xl mx-auto animate-fade-in">
-            <div className="space-y-6">
+        <Card className="w-full max-w-3xl mx-auto animate-fade-in">
+            <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
                 {/* Header avec progression */}
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-xl font-semibold">Questions de Clarification</h3>
-                        <span className="text-sm text-muted-foreground">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                        <h3 className="text-lg sm:text-xl font-semibold">Questions de Clarification</h3>
+                        <span className="text-xs sm:text-sm text-muted-foreground">
                             Question {currentQuestionIndex + 1} sur {questions.length}
                         </span>
                     </div>
@@ -114,29 +114,29 @@ const ClarifyingQuestionsQuiz: React.FC<ClarifyingQuestionsQuizProps> = ({ idea,
                 {/* Question actuelle */}
                 <div className="space-y-4">
                     <div>
-                        <h4 className="text-lg font-medium mb-2">{currentQuestion.question}</h4>
+                        <h4 className="text-base sm:text-lg font-medium mb-2">{currentQuestion.question}</h4>
                         {currentQuestion.explanation && (
-                            <p className="text-sm text-muted-foreground mb-4">
+                            <p className="text-xs sm:text-sm text-muted-foreground mb-4">
                                 💡 {currentQuestion.explanation}
                             </p>
                         )}
                     </div>
 
                     {/* Options de réponse */}
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                         {currentQuestion.options.map((option, optionIndex) => {
                             const isSelected = answers[currentQuestionIndex] === option;
                             return (
                                 <button
                                     key={optionIndex}
                                     onClick={() => handleSelectOption(option)}
-                                    className={`w-full text-left p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                                    className={`w-full text-left p-3 sm:p-4 rounded-lg border-2 transition-all hover:shadow-md text-sm sm:text-base ${
                                         isSelected
                                             ? 'border-brand bg-brand/10 shadow-md'
                                             : 'border-border bg-background hover:border-brand/50'
                                     }`}
                                 >
-                                    <div className="flex items-start gap-3">
+                                    <div className="flex items-start gap-2 sm:gap-3">
                                         <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 ${
                                             isSelected
                                                 ? 'border-brand bg-brand text-white'

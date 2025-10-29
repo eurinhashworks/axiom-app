@@ -66,10 +66,10 @@ const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
     };
 
     return (
-        <div className="space-y-8 animate-fade-in" data-section="evaluation">
+        <div className="space-y-6 sm:space-y-8 animate-fade-in" data-section="evaluation">
             <Card>
-                <h3 className="text-xl font-semibold mb-4">Évaluation de l'Idée</h3>
-                <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                <h3 className="text-lg sm:text-xl font-semibold mb-4">Évaluation de l'Idée</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-x-8 sm:gap-y-4">
                     {/* Score Overview */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
@@ -105,8 +105,8 @@ const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
             {/* Technologies recommandées */}
             {(idea.evaluation?.recommendedTechnologies && idea.evaluation.recommendedTechnologies.length > 0) && (
                 <Card>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-semibold">Technologies Recommandées</h3>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h3 className="text-lg sm:text-xl font-semibold">Technologies Recommandées</h3>
                         <Button
                             variant="secondary"
                             className="text-sm px-3 py-1"
@@ -140,8 +140,8 @@ const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
             {/* Bases de données recommandées */}
             {(idea.evaluation?.recommendedDatabases && idea.evaluation.recommendedDatabases.length > 0) && (
                 <Card>
-                    <h3 className="text-xl font-semibold mb-4">Bases de Données Recommandées</h3>
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-4">Bases de Données Recommandées</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {idea.evaluation.recommendedDatabases.map((db, index) => (
                             <div key={index} className="p-4 bg-muted/50 rounded-lg border border-border">
                                 <div className="flex items-start justify-between mb-2">

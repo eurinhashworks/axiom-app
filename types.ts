@@ -73,6 +73,11 @@ export interface Idea {
     authorName?: string;
     authorPhotoURL?: string;
     clarifyingAnswers?: ClarifyingQuestionAnswer[]; // Réponses aux questions du quiz
+    isFavorite?: boolean;
+    isArchived?: boolean;
+    tags?: string[];
+    userId: string;
+    updatedAt: number;
 }
 
 export interface Comment {

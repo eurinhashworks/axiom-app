@@ -96,15 +96,15 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ idea }) => {
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-6 sm:space-y-8 animate-fade-in">
             <Card className="hover:shadow-lg transition-shadow">
-                <h3 className="text-xl font-semibold mb-2">Résumé de l'Idée</h3>
-                <p className="text-muted-foreground leading-relaxed">{summary}</p>
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">Résumé de l'Idée</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{summary}</p>
             </Card>
             
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 <Card className="hover:shadow-lg transition-shadow">
-                    <h3 className="text-xl font-semibold mb-4">Questions de Clarification</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold mb-4">Questions de Clarification</h3>
                     {idea.clarifyingAnswers && idea.clarifyingAnswers.length > 0 ? (
                         <div className="space-y-4">
                             {idea.clarifyingAnswers.map((answer, i) => (
@@ -137,7 +137,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ idea }) => {
                     )}
                 </Card>
                 <Card className="hover:shadow-lg transition-shadow">
-                    <h3 className="text-xl font-semibold mb-4">Risques Potentiels</h3>
+                    <h3 className="text-lg sm:text-xl font-semibold mb-4">Risques Potentiels</h3>
                     <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
                         {potentialRisks.map((r, i) => (
                             <li key={i} className="leading-relaxed">{r}</li>

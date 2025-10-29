@@ -66,7 +66,7 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
         <Modal isOpen={isOpen} onClose={onClose} title="Modifier l'idée">
             <div className="space-y-4">
                 <div>
-                    <label htmlFor="edit-title" className="block text-sm font-medium mb-2">
+                    <label htmlFor="edit-title" className="block text-xs sm:text-sm font-medium mb-2">
                         Titre
                     </label>
                     <input
@@ -74,16 +74,16 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-4 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+                        className="w-full px-3 sm:px-4 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm sm:text-base"
                         placeholder="Titre de l'idée"
                         maxLength={100}
                     />
                 </div>
 
                 <div>
-                    <label htmlFor="edit-brain-dump" className="block text-sm font-medium mb-2">
+                    <label htmlFor="edit-brain-dump" className="block text-xs sm:text-sm font-medium mb-2">
                         Brain Dump
-                        <span className="text-xs text-muted-foreground ml-2">
+                        <span className="text-xs text-muted-foreground ml-1 sm:ml-2 block sm:inline">
                             (modifier le brain dump réinitialisera l'analyse)
                         </span>
                     </label>
@@ -91,26 +91,27 @@ const EditIdeaModal: React.FC<EditIdeaModalProps> = ({ idea, isOpen, onClose }) 
                         id="edit-brain-dump"
                         value={brainDump}
                         onChange={(e) => setBrainDump(e.target.value)}
-                        className="w-full px-4 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent min-h-[150px] resize-y"
+                        className="w-full px-3 sm:px-4 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent min-h-[120px] sm:min-h-[150px] resize-y text-sm sm:text-base"
                         placeholder="Décrivez votre idée en détail..."
                     />
                     {brainDump !== idea.brainDump && (
-                        <div className="mt-2 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800 rounded-md">
-                            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                        <div className="mt-2 p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-800 rounded-md">
+                            <p className="text-xs sm:text-sm text-yellow-800 dark:text-yellow-200">
                                 ⚠️ Modifier le brain dump réinitialisera l'analyse, l'évaluation et la roadmap.
                             </p>
                         </div>
                     )}
                 </div>
 
-                <div className="flex justify-end gap-2 pt-4 border-t border-border">
-                    <Button variant="secondary" onClick={onClose} disabled={isSaving}>
+                <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4 border-t border-border">
+                    <Button variant="secondary" onClick={onClose} disabled={isSaving} className="w-full sm:w-auto">
                         Annuler
                     </Button>
                     <Button 
                         onClick={handleSave} 
                         disabled={!hasChanges || isSaving || !title.trim()}
                         isLoading={isSaving}
+                        className="w-full sm:w-auto"
                     >
                         Enregistrer
                     </Button>

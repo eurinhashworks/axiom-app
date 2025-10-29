@@ -132,33 +132,39 @@ const SessionPage: React.FC = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-105px)]">
+        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-105px)] lg:h-[calc(100vh-105px)]">
             <SessionSidebar idea={activeIdea} />
-            <main className="flex-1 p-8 overflow-y-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">{activeIdea.title}</h1>
-                    <div className="flex gap-2">
+            <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6">
+                    <h1 className="text-xl sm:text-2xl font-bold break-words">{activeIdea.title}</h1>
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                         <Button 
                             variant="secondary" 
                             onClick={() => setIsEditing(true)}
-                            className="text-sm"
+                            className="text-sm flex-1 sm:flex-initial"
                         >
                             <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
-                            Modifier
+                            <span className="hidden sm:inline">Modifier</span>
+                            <span className="sm:hidden">Mod.</span>
                         </Button>
                         {activeIdea.status !== 'DRAFT' && <ShareIdeaButton idea={activeIdea} />}
-                        <Button variant="secondary" onClick={() => setIsExporting(true)}>Exporter</Button>
+                        <Button variant="secondary" onClick={() => setIsExporting(true)} className="flex-1 sm:flex-initial">
+                            <span className="hidden sm:inline">Exporter</span>
+                            <span className="sm:hidden">Export</span>
+                        </Button>
                     </div>
                 </div>
 
                 {/* Guidance utilisateur */}
-                <UserGuidance idea={activeIdea} onAction={handleGuidanceAction} />
+                <div className="mb-4 sm:mb-6">
+                    <UserGuidance idea={activeIdea} onAction={handleGuidanceAction} />
+                </div>
 
                 {/* Actions rapides */}
                 {activeIdea.status !== 'DRAFT' && activeIdea.status !== 'ANALYZING' && (
-                    <div className="mb-6">
+                    <div className="mb-4 sm:mb-6">
                         <QuickActions idea={activeIdea} onAction={handleGuidanceAction} />
                     </div>
                 )}
