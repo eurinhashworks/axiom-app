@@ -19,7 +19,6 @@ import { prioritizationService, PrioritizedIdea } from '../services/prioritizati
 import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import { useToast } from '../contexts/ToastContext';
-import CommentDebug from '../components/debug/CommentDebug';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
@@ -393,9 +392,6 @@ const DashboardPage: React.FC = () => {
             )}
 
             <h2 className="text-2xl font-bold mt-8">Toutes les idées</h2>
-            
-            {/* Debug des commentaires - à supprimer après résolution */}
-            <CommentDebug />
             {filteredAndSortedIdeas.length > 0 ? (
                 <>
                     {viewMode === 'compact' && (
