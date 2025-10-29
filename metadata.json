@@ -1,0 +1,7 @@
+{
+  "name": "AXIOM : Suite de Clarté Stratégique IA",
+  "description": "Une application alimentée par l'IA pour transformer les idées chaotiques en stratégies claires et actionnables. Comprend un flux d'évaluation d'idées structuré, une IA conversationnelle en temps réel et un chatbot à usage général.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
