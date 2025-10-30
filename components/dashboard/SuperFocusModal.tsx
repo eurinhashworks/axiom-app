@@ -7,9 +7,10 @@ interface SuperFocusModalProps {
     onClose: () => void;
     stepTitle: string;
     tips?: string[];
+    onComplete?: () => void;
 }
 
-const SuperFocusModal: React.FC<SuperFocusModalProps> = ({ isOpen, onClose, stepTitle, tips = [] }) => {
+const SuperFocusModal: React.FC<SuperFocusModalProps> = ({ isOpen, onClose, stepTitle, tips = [], onComplete }) => {
     const [secondsLeft, setSecondsLeft] = useState(25 * 60); // Pomodoro 25min
     const [running, setRunning] = useState(false);
     const [checklist, setChecklist] = useState<string[]>([]);
@@ -103,8 +104,11 @@ const SuperFocusModal: React.FC<SuperFocusModalProps> = ({ isOpen, onClose, step
                     </div>
                 )}
 
-                <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={onClose}>Fermer</Button>
+                <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    {onComplete && (
+                        <Button onClick={onComplete} className="order-2 sm:order-1">Marquer terminé</Button>
+                    )}
+                    <Button variant="secondary" onClick={onClose} className="order-1 sm:order-2">Fermer</Button>
                 </div>
             </div>
         </Modal>

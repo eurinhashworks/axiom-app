@@ -53,6 +53,7 @@ const DashboardPage: React.FC = () => {
     const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
     const [progressPercent, setProgressPercent] = useState<number | null>(null);
     const [nextStepTitle, setNextStepTitle] = useState<string | null>(null);
+    const [nextStepId, setNextStepId] = useState<string | null>(null);
     const [nextStepTips, setNextStepTips] = useState<string[]>([]);
     const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
     const [isSuperFocusOpen, setIsSuperFocusOpen] = useState(false);
@@ -71,12 +72,14 @@ const DashboardPage: React.FC = () => {
                     const done = new Set(progress.completedStepIds || []);
                     const next = steps.find(s => !done.has(s.id));
                     setNextStepTitle(next ? next.title : null);
+                    setNextStepId(next ? next.id : null);
                     setNextStepTips(next?.tips || []);
                     const pct = await firebaseService.getProgressPercent(user.uid, rms[0].id);
                     setProgressPercent(pct);
                 } else {
                     setProgressPercent(null);
                     setNextStepTitle(null);
+                    setNextStepId(null);
                     setNextStepTips([]);
                     setCurrentSteps([]);
                 }
@@ -541,6 +544,28 @@ const DashboardPage: React.FC = () => {
                 onClose={() => setIsSuperFocusOpen(false)}
                 stepTitle={nextStepTitle || ''}
                 tips={nextStepTips}
+                onComplete={async () => {
+                    try {
+                        if (!user || roadmaps.length === 0 || !nextStepId) return;
+                        await firebaseService.markStepDone(user.uid, roadmaps[0].id, nextStepId);
+                        // rafraîchir progression et prochaine étape
+                        const steps = await firebaseService.getSteps(roadmaps[0].id);
+                        const progress = await firebaseService.getOrCreateProgress(user.uid, roadmaps[0].id);
+                        const done = new Set(progress.completedStepIds || []);
+                        const next = steps.find(s => !done.has(s.id));
+                        setCurrentSteps(steps);
+                        setNextStepTitle(next ? next.title : null);
+                        setNextStepId(next ? next.id : null);
+                        setNextStepTips(next?.tips || []);
+                        const pct = await firebaseService.getProgressPercent(user.uid, roadmaps[0].id);
+                        setProgressPercent(pct);
+                        setIsSuperFocusOpen(false);
+                        showToast('Étape marquée comme terminée', 'success');
+                    } catch (e) {
+                        console.error(e);
+                        showToast('Erreur lors de la mise à jour de la progression', 'error');
+                    }
+                }}
             />
         </div>
     );
