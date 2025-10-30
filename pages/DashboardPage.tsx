@@ -26,6 +26,9 @@ import ProgressAndNext from '@/components/dashboard/ProgressAndNext';
 import TipsList from '@/components/dashboard/TipsList';
 import Recommendations from '@/components/dashboard/Recommendations';
 import IdeasSection from '@/components/dashboard/IdeasSection';
+import SearchBar from '@/components/dashboard/SearchBar';
+import FiltersBar from '@/components/dashboard/FiltersBar';
+import SortAndSelectBar from '@/components/dashboard/SortAndSelectBar';
 import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
@@ -329,54 +332,9 @@ const DashboardPage: React.FC = () => {
             {/* Barre de recherche et contrôles */}
             <div className="space-y-4">
                 <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Recherche */}
-                    <div className="flex-1 relative">
-                        <input
-                            type="text"
-                            placeholder="Rechercher une idée..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full px-4 py-2 pl-10 rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-                        />
-                        <svg 
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery('')}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Contrôles */}
+                    <SearchBar value={searchQuery} onChange={setSearchQuery} onClear={() => setSearchQuery('')} />
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <AdvancedFilters 
-                            ideas={ideas}
-                            onFiltersChange={setFilters}
-                            onClearFilters={() => setFilters({
-                                status: 'all',
-                                minOpportunity: 0,
-                                maxOpportunity: 10,
-                                minFeasibility: 0,
-                                maxFeasibility: 10,
-                                technologies: [],
-                                tags: [],
-                                dateRange: { start: '', end: '' },
-                                hasRoadmap: null,
-                                hasAnalysis: null
-                            })}
-                        />
-                        
+                        <FiltersBar ideas={ideas} filters={filters} onFiltersChange={setFilters} />
                         <Button
                             variant={showPriorityTimeline ? 'primary' : 'secondary'}
                             onClick={() => setShowPriorityTimeline(!showPriorityTimeline)}
@@ -388,56 +346,20 @@ const DashboardPage: React.FC = () => {
                             <span className="hidden sm:inline">Priorités</span>
                             <span className="sm:hidden">Priorités</span>
                         </Button>
-                        
-                        <ViewToggle 
-                            currentView={viewMode}
-                            onViewChange={setViewMode}
-                        />
+                        <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
                     </div>
                 </div>
 
                 {/* Tri et sélection */}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as SortOption)}
-                            className="flex-1 sm:flex-initial px-3 py-2 rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent text-sm min-w-[140px]"
-                        >
-                            <option value="date-desc">Date (récent)</option>
-                            <option value="date-asc">Date (ancien)</option>
-                            <option value="title-asc">Titre (A-Z)</option>
-                            <option value="title-desc">Titre (Z-A)</option>
-                            <option value="opportunity-desc">Opportunité (haut)</option>
-                            <option value="opportunity-asc">Opportunité (bas)</option>
-                            <option value="feasibility-desc">Faisabilité (haut)</option>
-                            <option value="feasibility-asc">Faisabilité (bas)</option>
-                        </select>
-
-                        {filteredAndSortedIdeas.length > 0 && (
-                            <Button
-                                variant="secondary"
-                                onClick={handleSelectAll}
-                                className="text-sm w-full sm:w-auto flex-1 sm:flex-initial"
-                            >
-                                <span className="hidden sm:inline">
-                                    {selectedIdeas.size === filteredAndSortedIdeas.length ? 'Tout désélectionner' : 'Tout sélectionner'}
-                                </span>
-                                <span className="sm:hidden">
-                                    {selectedIdeas.size === filteredAndSortedIdeas.length ? 'Désélectionner' : 'Sélectionner'}
-                                </span>
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Compteur de résultats */}
-                    <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
-                        {filteredAndSortedIdeas.length} idée(s)
-                        {searchQuery && (
-                            <span className="hidden sm:inline"> trouvée(s) pour "{searchQuery}"</span>
-                        )}
-                    </div>
-                </div>
+                <SortAndSelectBar
+                    sortBy={sortBy}
+                    onSortChange={(v) => setSortBy(v)}
+                    totalCount={filteredAndSortedIdeas.length}
+                    searchQuery={searchQuery}
+                    allSelected={selectedIdeas.size === filteredAndSortedIdeas.length && filteredAndSortedIdeas.length > 0}
+                    hasItems={filteredAndSortedIdeas.length > 0}
+                    onSelectAll={handleSelectAll}
+                />
 
                 {/* Actions rapides */}
                 {selectedIdeas.size > 0 && (
