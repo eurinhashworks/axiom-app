@@ -30,6 +30,7 @@ import SearchBar from '@/components/dashboard/SearchBar';
 import FiltersBar from '@/components/dashboard/FiltersBar';
 import SortAndSelectBar from '@/components/dashboard/SortAndSelectBar';
 import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
+import QuickRoadmapCreator from '@/components/dashboard/QuickRoadmapCreator';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
@@ -67,6 +68,7 @@ const DashboardPage: React.FC = () => {
     const [isSuperFocusOpen, setIsSuperFocusOpen] = useState(false);
     const [recommendedQuick, setRecommendedQuick] = useState<Step | null>(null);
     const [recommendedImpact, setRecommendedImpact] = useState<Step | null>(null);
+    const [isRoadmapCreatorOpen, setIsRoadmapCreatorOpen] = useState(false);
 
     const recomputeRecommendations = (steps: Step[], completedIds: Set<string>) => {
         const remaining = steps.filter(s => !completedIds.has(s.id));
@@ -87,9 +89,8 @@ const DashboardPage: React.FC = () => {
         setRecommendedImpact(impact || null);
     };
 
-    // Charger roadmaps et progression de base (v1)
-    useEffect(() => {
-        const load = async () => {
+    // Fonction de chargement réutilisable
+    const loadRoadmaps = async () => {
             try {
                 if (!user) return;
                 const rms = await firebaseService.getRoadmaps(user.uid);
@@ -118,8 +119,11 @@ const DashboardPage: React.FC = () => {
             } catch (e) {
                 console.error(e);
             }
-        };
-        load();
+    };
+
+    // Charger roadmaps et progression de base (v1)
+    useEffect(() => {
+        loadRoadmaps();
     }, [user]);
 
     const handleCreateNewIdea = async (title: string) => {
@@ -316,6 +320,16 @@ const DashboardPage: React.FC = () => {
                 onStartNext={() => setIsSuperFocusOpen(true)}
             />
 
+            {roadmaps.length === 0 && (
+                <div className="p-6 rounded-lg border border-border bg-muted/30 text-center">
+                    <div className="text-lg font-semibold mb-2">Créez votre première roadmap</div>
+                    <div className="text-sm text-muted-foreground mb-4">
+                        Organisez votre projet en étapes claires et progressez vers vos objectifs.
+                    </div>
+                    <Button onClick={() => setIsRoadmapCreatorOpen(true)}>Créer une roadmap</Button>
+                </div>
+            )}
+
             <TipsList tips={nextStepTips} />
 
             <Recommendations 
@@ -453,6 +467,15 @@ const DashboardPage: React.FC = () => {
                         console.error(e);
                         showToast('Erreur lors de la mise à jour de la progression', 'error');
                     }
+                }}
+            />
+
+            {/* Quick Roadmap Creator */}
+            <QuickRoadmapCreator
+                isOpen={isRoadmapCreatorOpen}
+                onClose={() => setIsRoadmapCreatorOpen(false)}
+                onSuccess={() => {
+                    loadRoadmaps();
                 }}
             />
         </div>
