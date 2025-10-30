@@ -97,3 +97,40 @@ export interface Like {
     userId: string;
     createdAt: number;
 }
+
+// Sprint 1: Roadmaps / Steps / Progress
+export interface Roadmap {
+    id: string;
+    ownerId: string; // utilisateur propriétaire
+    title: string;
+    description?: string;
+    goals?: string[];
+    createdAt: number;
+    updatedAt?: number;
+}
+
+export interface Step {
+    id: string;
+    roadmapId: string;
+    title: string;
+    description?: string;
+    prerequisites?: string[]; // ids de steps
+    estimateMinutes?: number;
+    difficulty?: 'easy' | 'medium' | 'hard';
+    tips?: string[];
+    proofOfProgress?: {
+        type: 'link' | 'file' | 'text';
+        instructions?: string;
+    };
+    order?: number; // pour tri simple
+    createdAt: number;
+}
+
+export interface UserProgress {
+    id: string; // `${userId}_${roadmapId}` ou doc auto + champs clés
+    userId: string;
+    roadmapId: string;
+    completedStepIds: string[];
+    currentStepId?: string;
+    lastActivityAt: number;
+}

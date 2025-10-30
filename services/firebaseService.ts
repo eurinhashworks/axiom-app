@@ -16,7 +16,7 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { Idea, Comment, Like } from '../types';
+import { Idea, Comment, Like, Roadmap, Step, UserProgress } from '../types';
 import { 
   MarketAnalysis, 
   UserProfile, 
@@ -27,6 +27,9 @@ import {
 
 export class FirebaseService {
   private ideasCollection = collection(db, 'ideas');
+  private roadmapsCollection = collection(db, 'roadmaps');
+  private stepsCollection = collection(db, 'steps');
+  private progressesCollection = collection(db, 'progresses');
   private marketAnalysisCollection = collection(db, 'marketAnalysis');
   private userProfilesCollection = collection(db, 'userProfiles');
   private feedbackCollection = collection(db, 'feedback');
@@ -738,6 +741,148 @@ export class FirebaseService {
     });
   }
 
+  // ===== Roadmaps & Steps & Progress =====
+  async createRoadmap(ownerId: string, data: Omit<Roadmap, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    const ref = doc(this.roadmapsCollection);
+    const payload: Roadmap = {
+      id: ref.id,
+      ownerId,
+      title: data.title,
+      description: data.description,
+      goals: data.goals,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    await setDoc(ref, this.cleanFirestoreData({
+      ...payload,
+      createdAt: Timestamp.fromMillis(payload.createdAt),
+      updatedAt: Timestamp.fromMillis(payload.updatedAt!)
+    }));
+    return ref.id;
+  }
+
+  async getRoadmaps(ownerId: string): Promise<Roadmap[]> {
+    const q = query(this.roadmapsCollection, where('ownerId', '==', ownerId), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        ownerId: data.ownerId,
+        title: data.title,
+        description: data.description,
+        goals: data.goals || [],
+        createdAt: data.createdAt?.toMillis?.() || Date.now(),
+        updatedAt: data.updatedAt?.toMillis?.()
+      } as Roadmap;
+    });
+  }
+
+  async createStep(stepInput: Omit<Step, 'id' | 'createdAt'>): Promise<string> {
+    const ref = doc(this.stepsCollection);
+    const payload: Step = {
+      ...stepInput,
+      id: ref.id,
+      createdAt: Date.now()
+    };
+    await setDoc(ref, this.cleanFirestoreData({
+      ...payload,
+      createdAt: Timestamp.fromMillis(payload.createdAt)
+    }));
+    return ref.id;
+  }
+
+  async getSteps(roadmapId: string): Promise<Step[]> {
+    const q = query(this.stepsCollection, where('roadmapId', '==', roadmapId));
+    const snap = await getDocs(q);
+    const steps = snap.docs.map(d => {
+      const data = d.data() as any;
+      return {
+        id: d.id,
+        roadmapId: data.roadmapId,
+        title: data.title,
+        description: data.description,
+        prerequisites: data.prerequisites || [],
+        estimateMinutes: data.estimateMinutes,
+        difficulty: data.difficulty,
+        tips: data.tips || [],
+        proofOfProgress: data.proofOfProgress,
+        order: data.order,
+        createdAt: data.createdAt?.toMillis?.() || Date.now()
+      } as Step;
+    });
+    // Tri par order puis par createdAt
+    steps.sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || a.createdAt - b.createdAt);
+    return steps;
+  }
+
+  async getOrCreateProgress(userId: string, roadmapId: string): Promise<UserProgress> {
+    const key = `${userId}_${roadmapId}`;
+    const ref = doc(this.progressesCollection, key);
+    const existing = await getDoc(ref);
+    if (existing.exists()) {
+      const data = existing.data() as any;
+      return {
+        id: existing.id,
+        userId: data.userId,
+        roadmapId: data.roadmapId,
+        completedStepIds: data.completedStepIds || [],
+        currentStepId: data.currentStepId,
+        lastActivityAt: data.lastActivityAt?.toMillis?.() || Date.now()
+      } as UserProgress;
+    }
+    const payload: UserProgress = {
+      id: key,
+      userId,
+      roadmapId,
+      completedStepIds: [],
+      currentStepId: undefined,
+      lastActivityAt: Date.now()
+    };
+    await setDoc(ref, this.cleanFirestoreData({
+      ...payload,
+      lastActivityAt: Timestamp.fromMillis(payload.lastActivityAt)
+    }));
+    return payload;
+  }
+
+  async markStepDone(userId: string, roadmapId: string, stepId: string): Promise<void> {
+    const key = `${userId}_${roadmapId}`;
+    const ref = doc(this.progressesCollection, key);
+    const current = await getDoc(ref);
+    const base = current.exists() ? current.data() as any : {};
+    const completed = new Set<string>(base.completedStepIds || []);
+    completed.add(stepId);
+    await setDoc(ref, this.cleanFirestoreData({
+      userId,
+      roadmapId,
+      completedStepIds: Array.from(completed),
+      lastActivityAt: Timestamp.now(),
+      currentStepId: base.currentStepId && base.currentStepId === stepId ? undefined : base.currentStepId
+    }), { merge: true });
+  }
+
+  async setCurrentStep(userId: string, roadmapId: string, stepId: string | undefined): Promise<void> {
+    const key = `${userId}_${roadmapId}`;
+    const ref = doc(this.progressesCollection, key);
+    await setDoc(ref, this.cleanFirestoreData({
+      userId,
+      roadmapId,
+      currentStepId: stepId || null,
+      lastActivityAt: Timestamp.now()
+    }), { merge: true });
+  }
+
+  // Utilitaire: calculer progression en %
+  async getProgressPercent(userId: string, roadmapId: string): Promise<number> {
+    const [steps, progress] = await Promise.all([
+      this.getSteps(roadmapId),
+      this.getOrCreateProgress(userId, roadmapId)
+    ]);
+    if (steps.length === 0) return 0;
+    const done = progress.completedStepIds.length;
+    return Math.round((done / steps.length) * 100);
+  }
 }
 
 export const firebaseService = new FirebaseService();

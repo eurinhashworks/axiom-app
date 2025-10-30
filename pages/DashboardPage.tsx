@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useIdeas } from '../contexts/IdeasContext';
-import { Idea, IdeaStatus } from '../types';
+import { Idea, IdeaStatus, Roadmap } from '../types';
+import { firebaseService } from '../services/firebaseService';
+import { useAuth } from '../contexts/AuthContext';
 import * as geminiService from '../services/geminiService';
 import Button from '../components/ui/Button';
 import IdeaCard from '../components/dashboard/IdeaCard';
@@ -23,6 +25,7 @@ import { useToast } from '../contexts/ToastContext';
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
 const DashboardPage: React.FC = () => {
+    const { user } = useAuth();
     const { ideas, addIdea, setActiveIdea } = useIdeas();
     const [isNewIdeaModalOpen, setIsNewIdeaModalOpen] = useState(false);
     const [isPrioritizing, setIsPrioritizing] = useState(false);
@@ -46,6 +49,35 @@ const DashboardPage: React.FC = () => {
         hasAnalysis: null
     });
     const { showToast } = useToast();
+    const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
+    const [progressPercent, setProgressPercent] = useState<number | null>(null);
+    const [nextStepTitle, setNextStepTitle] = useState<string | null>(null);
+
+    // Charger roadmaps et progression de base (v1)
+    useEffect(() => {
+        const load = async () => {
+            try {
+                if (!user) return;
+                const rms = await firebaseService.getRoadmaps(user.uid);
+                setRoadmaps(rms);
+                if (rms.length > 0) {
+                    const steps = await firebaseService.getSteps(rms[0].id);
+                    const progress = await firebaseService.getOrCreateProgress(user.uid, rms[0].id);
+                    const done = new Set(progress.completedStepIds || []);
+                    const next = steps.find(s => !done.has(s.id));
+                    setNextStepTitle(next ? next.title : null);
+                    const pct = await firebaseService.getProgressPercent(user.uid, rms[0].id);
+                    setProgressPercent(pct);
+                } else {
+                    setProgressPercent(null);
+                    setNextStepTitle(null);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        load();
+    }, [user]);
 
     const handleCreateNewIdea = async (title: string) => {
         try {
@@ -243,6 +275,23 @@ const DashboardPage: React.FC = () => {
                     >
                         + Nouvelle Idée
                     </Button>
+                </div>
+            </div>
+
+            {/* Bandeau accompagnateur (progression + prochaine étape) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-lg border border-border bg-muted/30">
+                    <div className="text-sm text-muted-foreground mb-1">Ma progression</div>
+                    <div className="flex items-center justify-between">
+                        <div className="text-2xl font-bold">{progressPercent !== null ? `${progressPercent}%` : '--'}</div>
+                        <div className="text-xs text-muted-foreground">
+                            {roadmaps.length > 0 ? roadmaps[0].title : 'Aucune roadmap'}
+                        </div>
+                    </div>
+                </div>
+                <div className="p-4 rounded-lg border border-border bg-muted/30">
+                    <div className="text-sm text-muted-foreground mb-1">Prochaine étape</div>
+                    <div className="text-base font-semibold truncate">{nextStepTitle || '—'}</div>
                 </div>
             </div>
 
