@@ -22,6 +22,10 @@ import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import { useToast } from '../contexts/ToastContext';
 import SuperFocusModal from '@/components/dashboard/SuperFocusModal';
+import ProgressAndNext from '@/components/dashboard/ProgressAndNext';
+import TipsList from '@/components/dashboard/TipsList';
+import Recommendations from '@/components/dashboard/Recommendations';
+import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
@@ -292,102 +296,34 @@ const DashboardPage: React.FC = () => {
     return (
         <div className="space-y-8 animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-                    Tableau de Bord des Idées
-                </h1>
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <Button 
-                        onClick={handlePrioritize} 
-                        disabled={isPrioritizing || ideas.filter(i => i.status === 'EVALUATED' || i.status === 'ROADMAP_GENERATED').length < 2}
-                        variant="secondary"
-                        className="transition-all hover:scale-105 active:scale-95"
-                    >
-                        {isPrioritizing ? <Spinner/> : "Prioriser les Idées"}
-                    </Button>
-                    <Button 
-                        onClick={() => setIsNewIdeaModalOpen(true)}
-                        className="transition-all hover:scale-105 active:scale-95"
-                    >
-                        + Nouvelle Idée
-                    </Button>
-                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">Tableau de Bord des Idées</h1>
+                <DashboardHeaderActions 
+                    isPrioritizing={isPrioritizing}
+                    canPrioritize={ideas.filter(i => i.status === 'EVALUATED' || i.status === 'ROADMAP_GENERATED').length >= 2}
+                    onPrioritize={handlePrioritize}
+                    onNewIdea={() => setIsNewIdeaModalOpen(true)}
+                />
             </div>
 
-            {/* Bandeau accompagnateur (progression + prochaine étape) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg border border-border bg-muted/30">
-                    <div className="text-sm text-muted-foreground mb-1">Ma progression</div>
-                    <div className="flex items-center justify-between">
-                        <div className="text-2xl font-bold">{progressPercent !== null ? `${progressPercent}%` : '--'}</div>
-                        <div className="text-xs text-muted-foreground">
-                            {roadmaps.length > 0 ? roadmaps[0].title : 'Aucune roadmap'}
-                        </div>
-                    </div>
-                </div>
-                <div className="p-4 rounded-lg border border-border bg-muted/30">
-                    <div className="text-sm text-muted-foreground mb-1">Prochaine étape</div>
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="text-base font-semibold truncate">{nextStepTitle || '—'}</div>
-                        {nextStepTitle && (
-                            <Button onClick={() => setIsSuperFocusOpen(true)} className="text-sm">Commencer</Button>
-                        )}
-                    </div>
-                </div>
-            </div>
+            <ProgressAndNext 
+                progressPercent={progressPercent}
+                roadmapTitle={roadmaps.length > 0 ? roadmaps[0].title : null}
+                nextStepTitle={nextStepTitle}
+                onStartNext={() => setIsSuperFocusOpen(true)}
+            />
 
-            {/* Conseils contextuels */}
-            {nextStepTips.length > 0 && (
-                <div className="p-4 rounded-lg border border-border bg-muted/20">
-                    <div className="text-sm text-muted-foreground mb-2">Conseils pour l'étape</div>
-                    <ul className="list-disc pl-5 space-y-1">
-                        {nextStepTips.slice(0, 5).map((t, i) => (
-                            <li key={i} className="text-sm text-muted-foreground">{t}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            <TipsList tips={nextStepTips} />
 
-            {/* Recommandations */}
-            {(recommendedQuick || recommendedImpact) && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {recommendedQuick && (
-                        <div className="p-4 rounded-lg border border-border bg-background">
-                            <div className="text-xs font-semibold text-green-600 mb-1">Quick win</div>
-                            <div className="text-sm font-semibold truncate">{recommendedQuick.title}</div>
-                            <div className="text-xs text-muted-foreground mb-2">
-                                {recommendedQuick.estimateMinutes ? `${recommendedQuick.estimateMinutes} min` : 'Durée inconnue'}
-                            </div>
-                            <Button
-                                className="text-sm"
-                                onClick={() => {
-                                    setNextStepTitle(recommendedQuick.title);
-                                    setNextStepId(recommendedQuick.id);
-                                    setNextStepTips(recommendedQuick.tips || []);
-                                    setIsSuperFocusOpen(true);
-                                }}
-                            >Commencer</Button>
-                        </div>
-                    )}
-                    {recommendedImpact && (
-                        <div className="p-4 rounded-lg border border-border bg-background">
-                            <div className="text-xs font-semibold text-blue-600 mb-1">High impact</div>
-                            <div className="text-sm font-semibold truncate">{recommendedImpact.title}</div>
-                            <div className="text-xs text-muted-foreground mb-2">
-                                {recommendedImpact.difficulty ? `Difficulté: ${recommendedImpact.difficulty}` : 'Difficulté inconnue'}
-                            </div>
-                            <Button
-                                className="text-sm"
-                                onClick={() => {
-                                    setNextStepTitle(recommendedImpact.title);
-                                    setNextStepId(recommendedImpact.id);
-                                    setNextStepTips(recommendedImpact.tips || []);
-                                    setIsSuperFocusOpen(true);
-                                }}
-                            >Commencer</Button>
-                        </div>
-                    )}
-                </div>
-            )}
+            <Recommendations 
+                quick={recommendedQuick || undefined}
+                impact={recommendedImpact || undefined}
+                onSelect={(step) => {
+                    setNextStepTitle(step.title);
+                    setNextStepId(step.id);
+                    setNextStepTips(step.tips || []);
+                    setIsSuperFocusOpen(true);
+                }}
+            />
 
             {/* Barre de recherche et contrôles */}
             <div className="space-y-4">
