@@ -25,6 +25,7 @@ import SuperFocusModal from '@/components/dashboard/SuperFocusModal';
 import ProgressAndNext from '@/components/dashboard/ProgressAndNext';
 import TipsList from '@/components/dashboard/TipsList';
 import Recommendations from '@/components/dashboard/Recommendations';
+import IdeasSection from '@/components/dashboard/IdeasSection';
 import DashboardHeaderActions from '@/components/dashboard/DashboardHeaderActions';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
@@ -470,52 +471,15 @@ const DashboardPage: React.FC = () => {
                 </div>
             )}
 
-            <h2 className="text-2xl font-bold mt-8">Toutes les idées</h2>
-            {filteredAndSortedIdeas.length > 0 ? (
-                <>
-                    {viewMode === 'compact' && (
-                        <CompactView 
-                            ideas={filteredAndSortedIdeas} 
-                            onSelectIdea={handleSelectIdea} 
-                        />
-                    )}
-                    {viewMode === 'detail' && (
-                        <DetailView 
-                            ideas={filteredAndSortedIdeas} 
-                            onSelectIdea={handleSelectIdea} 
-                        />
-                    )}
-                    {viewMode === 'grid' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                            {filteredAndSortedIdeas.map(idea => (
-                                <IdeaCardEnhanced 
-                                    key={idea.id} 
-                                    idea={idea} 
-                                    onSelect={() => handleSelectIdea(idea)}
-                                    showSelection={true}
-                                    isSelected={selectedIdeas.has(idea.id)}
-                                    onToggleSelection={() => handleToggleSelection(idea.id)}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </>
-            ) : (
-                <EmptyState
-                    title={searchQuery || filters.status !== 'all' ? "Aucune idée correspondante" : "Aucune idée pour le moment"}
-                    description={
-                        searchQuery || filters.status !== 'all'
-                            ? "Essayez de modifier vos critères de recherche ou de filtres."
-                            : "Commencez à transformer vos idées en opportunités stratégiques. Créez votre première idée pour démarrer l'analyse."
-                    }
-                    action={
-                        !searchQuery && filters.status === 'all' ? {
-                            label: "+ Nouvelle Idée",
-                            onClick: () => setIsNewIdeaModalOpen(true)
-                        } : undefined
-                    }
-                />
-            )}
+            <IdeasSection
+                ideas={filteredAndSortedIdeas}
+                viewMode={viewMode}
+                selectedIds={selectedIdeas}
+                onToggleSelection={handleToggleSelection}
+                onSelectIdea={handleSelectIdea}
+                isFilteredOrSearched={!!searchQuery || filters.status !== 'all'}
+                onNewIdea={() => setIsNewIdeaModalOpen(true)}
+            />
 
             {isNewIdeaModalOpen && (
                 <NewIdeaModal
