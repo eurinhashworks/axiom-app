@@ -121,7 +121,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ ideaId }) => {
     <Card className="p-4 sm:p-6 border-2 border-brand/20">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-brand to-brand-accent bg-clip-text text-transparent">
-          💬 Forum de Discussion
+          💬 Commentaires
         </h3>
         <div className="flex items-center gap-3">
           <LikeButton ideaId={ideaId} size="md" />
