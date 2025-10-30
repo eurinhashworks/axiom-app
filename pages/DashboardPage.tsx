@@ -57,6 +57,27 @@ const DashboardPage: React.FC = () => {
     const [nextStepTips, setNextStepTips] = useState<string[]>([]);
     const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
     const [isSuperFocusOpen, setIsSuperFocusOpen] = useState(false);
+    const [recommendedQuick, setRecommendedQuick] = useState<Step | null>(null);
+    const [recommendedImpact, setRecommendedImpact] = useState<Step | null>(null);
+
+    const recomputeRecommendations = (steps: Step[], completedIds: Set<string>) => {
+        const remaining = steps.filter(s => !completedIds.has(s.id));
+        if (remaining.length === 0) {
+            setRecommendedQuick(null);
+            setRecommendedImpact(null);
+            return;
+        }
+        const quick = [...remaining].sort((a, b) => (a.estimateMinutes ?? 9999) - (b.estimateMinutes ?? 9999) || (a.order ?? 0) - (b.order ?? 0))[0];
+        const byImpact = [...remaining].sort((a, b) => {
+            const diffRank = (v?: 'easy'|'medium'|'hard') => v === 'hard' ? 3 : v === 'medium' ? 2 : 1;
+            const dr = diffRank(b.difficulty) - diffRank(a.difficulty);
+            if (dr !== 0) return dr;
+            return (b.estimateMinutes ?? -1) - (a.estimateMinutes ?? -1);
+        });
+        const impact = byImpact[0];
+        setRecommendedQuick(quick || null);
+        setRecommendedImpact(impact || null);
+    };
 
     // Charger roadmaps et progression de base (v1)
     useEffect(() => {
@@ -74,6 +95,7 @@ const DashboardPage: React.FC = () => {
                     setNextStepTitle(next ? next.title : null);
                     setNextStepId(next ? next.id : null);
                     setNextStepTips(next?.tips || []);
+                    recomputeRecommendations(steps, done);
                     const pct = await firebaseService.getProgressPercent(user.uid, rms[0].id);
                     setProgressPercent(pct);
                 } else {
@@ -82,6 +104,8 @@ const DashboardPage: React.FC = () => {
                     setNextStepId(null);
                     setNextStepTips([]);
                     setCurrentSteps([]);
+                    setRecommendedQuick(null);
+                    setRecommendedImpact(null);
                 }
             } catch (e) {
                 console.error(e);
@@ -320,6 +344,48 @@ const DashboardPage: React.FC = () => {
                             <li key={i} className="text-sm text-muted-foreground">{t}</li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+            {/* Recommandations */}
+            {(recommendedQuick || recommendedImpact) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {recommendedQuick && (
+                        <div className="p-4 rounded-lg border border-border bg-background">
+                            <div className="text-xs font-semibold text-green-600 mb-1">Quick win</div>
+                            <div className="text-sm font-semibold truncate">{recommendedQuick.title}</div>
+                            <div className="text-xs text-muted-foreground mb-2">
+                                {recommendedQuick.estimateMinutes ? `${recommendedQuick.estimateMinutes} min` : 'Durée inconnue'}
+                            </div>
+                            <Button
+                                className="text-sm"
+                                onClick={() => {
+                                    setNextStepTitle(recommendedQuick.title);
+                                    setNextStepId(recommendedQuick.id);
+                                    setNextStepTips(recommendedQuick.tips || []);
+                                    setIsSuperFocusOpen(true);
+                                }}
+                            >Commencer</Button>
+                        </div>
+                    )}
+                    {recommendedImpact && (
+                        <div className="p-4 rounded-lg border border-border bg-background">
+                            <div className="text-xs font-semibold text-blue-600 mb-1">High impact</div>
+                            <div className="text-sm font-semibold truncate">{recommendedImpact.title}</div>
+                            <div className="text-xs text-muted-foreground mb-2">
+                                {recommendedImpact.difficulty ? `Difficulté: ${recommendedImpact.difficulty}` : 'Difficulté inconnue'}
+                            </div>
+                            <Button
+                                className="text-sm"
+                                onClick={() => {
+                                    setNextStepTitle(recommendedImpact.title);
+                                    setNextStepId(recommendedImpact.id);
+                                    setNextStepTips(recommendedImpact.tips || []);
+                                    setIsSuperFocusOpen(true);
+                                }}
+                            >Commencer</Button>
+                        </div>
+                    )}
                 </div>
             )}
 
