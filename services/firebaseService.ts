@@ -33,8 +33,6 @@ export class FirebaseService {
   private trainingDataCollection = collection(db, 'trainingData');
   private commentsCollection = collection(db, 'comments');
   private likesCollection = collection(db, 'likes');
-  private forumPostsCollection = collection(db, 'forumPosts');
-  private forumLikesCollection = collection(db, 'forumLikes');
 
   /**
    * Nettoie un objet en supprimant toutes les valeurs undefined
@@ -740,90 +738,6 @@ export class FirebaseService {
     });
   }
 
-  // ===== MÉTHODES FORUM =====
-
-  async createForumPost(postData: any): Promise<void> {
-    const docRef = doc(this.forumPostsCollection);
-    const cleanData = this.cleanFirestoreData({
-      ...postData,
-      id: docRef.id,
-      createdAt: Timestamp.fromMillis(postData.createdAt),
-      updatedAt: Timestamp.fromMillis(postData.updatedAt)
-    });
-    
-    await setDoc(docRef, cleanData);
-  }
-
-  async getForumPosts(): Promise<any[]> {
-    const q = query(
-      this.forumPostsCollection,
-      orderBy('createdAt', 'desc')
-    );
-    
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toMillis() || 0,
-        updatedAt: data.updatedAt?.toMillis() || 0
-      };
-    });
-  }
-
-  async toggleForumPostLike(postId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
-    const likeDocRef = doc(this.forumLikesCollection, `${postId}_${userId}`);
-    const likeDoc = await getDoc(likeDocRef);
-    
-    if (likeDoc.exists()) {
-      // Supprimer le like
-      await deleteDoc(likeDocRef);
-    } else {
-      // Ajouter le like
-      await setDoc(likeDocRef, {
-        postId,
-        userId,
-        createdAt: Timestamp.now()
-      });
-    }
-
-    // Compter les likes
-    const likesQuery = query(this.forumLikesCollection, where('postId', '==', postId));
-    const likesSnapshot = await getDocs(likesQuery);
-    const likeCount = likesSnapshot.size;
-
-    // Mettre à jour le compteur de likes sur le post
-    const postDocRef = doc(this.forumPostsCollection, postId);
-    await setDoc(postDocRef, { likes: likeCount }, { merge: true });
-
-    return {
-      liked: !likeDoc.exists(),
-      likeCount
-    };
-  }
-
-  async updateForumPost(postId: string, title: string, content: string): Promise<void> {
-    const postDocRef = doc(this.forumPostsCollection, postId);
-    await setDoc(postDocRef, {
-      title: title.trim(),
-      content: content.trim(),
-      updatedAt: Timestamp.now()
-    }, { merge: true });
-  }
-
-  async deleteForumPost(postId: string): Promise<void> {
-    const postDocRef = doc(this.forumPostsCollection, postId);
-    
-    // Supprimer tous les likes associés
-    const likesQuery = query(this.forumLikesCollection, where('postId', '==', postId));
-    const likesSnapshot = await getDocs(likesQuery);
-    const deleteLikesPromises = likesSnapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deleteLikesPromises);
-    
-    // Supprimer le post
-    await deleteDoc(postDocRef);
-  }
 }
 
 export const firebaseService = new FirebaseService();

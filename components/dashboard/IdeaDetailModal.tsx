@@ -6,7 +6,6 @@ import StatusBadge from './StatusBadge';
 import EditIdeaModal from './EditIdeaModal';
 import LikeButton from './LikeButton';
 import CommentsSection from './CommentsSection';
-import ForumButton from '../forum/ForumButton';
 import { useIdeas } from '../../contexts/IdeasContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -349,10 +348,7 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                     </div>
                 )}
 
-                {/* Bouton Forum */}
-                <div className="pt-4 border-t border-border">
-                    <ForumButton idea={idea} className="w-full" />
-                </div>
+                
             </div>
         </Modal>
     );

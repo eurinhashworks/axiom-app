@@ -3,15 +3,13 @@ import { useIdeas } from '../contexts/IdeasContext';
 import DashboardPage from '../pages/DashboardPage';
 import SessionPage from '../pages/SessionPage';
 import ProfilePage from '../pages/ProfilePage';
-import ForumPage from '../pages/ForumPage';
 
 const AxiomFlow: React.FC = () => {
     const { activeIdea } = useIdeas();
-    const [currentPage, setCurrentPage] = useState<'dashboard' | 'profile' | 'forum'>(() => {
+    const [currentPage, setCurrentPage] = useState<'dashboard' | 'profile'>(() => {
         // Déterminer la page initiale basée sur le hash
         const hash = window.location.hash;
         if (hash === '#profile') return 'profile';
-        if (hash === '#forum') return 'forum';
         return 'dashboard';
     });
 
@@ -21,8 +19,6 @@ const AxiomFlow: React.FC = () => {
             const hash = window.location.hash;
             if (hash === '#profile') {
                 setCurrentPage('profile');
-            } else if (hash === '#forum') {
-                setCurrentPage('forum');
             } else {
                 setCurrentPage('dashboard');
             }
@@ -40,10 +36,6 @@ const AxiomFlow: React.FC = () => {
     // Sinon, afficher la page appropriée
     if (currentPage === 'profile') {
         return <ProfilePage />;
-    }
-
-    if (currentPage === 'forum') {
-        return <ForumPage />;
     }
 
     return <DashboardPage />;

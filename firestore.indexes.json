@@ -55,20 +55,6 @@
           "order": "DESCENDING"
         }
       ]
-    },
-    {
-      "collectionGroup": "forumLikes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "postId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "ASCENDING"
-        }
-      ]
     }
   ],
   "fieldOverrides": []
