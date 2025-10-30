@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useIdeas } from '../contexts/IdeasContext';
-import { Idea, IdeaStatus, Roadmap } from '../types';
+import { Idea, IdeaStatus, Roadmap, Step } from '../types';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../contexts/AuthContext';
 import * as geminiService from '../services/geminiService';
@@ -21,6 +21,7 @@ import { prioritizationService, PrioritizedIdea } from '../services/prioritizati
 import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/ui/EmptyState';
 import { useToast } from '../contexts/ToastContext';
+import SuperFocusModal from '@/components/dashboard/SuperFocusModal';
 
 type SortOption = 'date-desc' | 'date-asc' | 'opportunity-desc' | 'opportunity-asc' | 'feasibility-desc' | 'feasibility-asc' | 'title-asc' | 'title-desc';
 
@@ -52,6 +53,9 @@ const DashboardPage: React.FC = () => {
     const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
     const [progressPercent, setProgressPercent] = useState<number | null>(null);
     const [nextStepTitle, setNextStepTitle] = useState<string | null>(null);
+    const [nextStepTips, setNextStepTips] = useState<string[]>([]);
+    const [currentSteps, setCurrentSteps] = useState<Step[]>([]);
+    const [isSuperFocusOpen, setIsSuperFocusOpen] = useState(false);
 
     // Charger roadmaps et progression de base (v1)
     useEffect(() => {
@@ -62,15 +66,19 @@ const DashboardPage: React.FC = () => {
                 setRoadmaps(rms);
                 if (rms.length > 0) {
                     const steps = await firebaseService.getSteps(rms[0].id);
+                    setCurrentSteps(steps);
                     const progress = await firebaseService.getOrCreateProgress(user.uid, rms[0].id);
                     const done = new Set(progress.completedStepIds || []);
                     const next = steps.find(s => !done.has(s.id));
                     setNextStepTitle(next ? next.title : null);
+                    setNextStepTips(next?.tips || []);
                     const pct = await firebaseService.getProgressPercent(user.uid, rms[0].id);
                     setProgressPercent(pct);
                 } else {
                     setProgressPercent(null);
                     setNextStepTitle(null);
+                    setNextStepTips([]);
+                    setCurrentSteps([]);
                 }
             } catch (e) {
                 console.error(e);
@@ -291,9 +299,26 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="p-4 rounded-lg border border-border bg-muted/30">
                     <div className="text-sm text-muted-foreground mb-1">Prochaine étape</div>
-                    <div className="text-base font-semibold truncate">{nextStepTitle || '—'}</div>
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="text-base font-semibold truncate">{nextStepTitle || '—'}</div>
+                        {nextStepTitle && (
+                            <Button onClick={() => setIsSuperFocusOpen(true)} className="text-sm">Commencer</Button>
+                        )}
+                    </div>
                 </div>
             </div>
+
+            {/* Conseils contextuels */}
+            {nextStepTips.length > 0 && (
+                <div className="p-4 rounded-lg border border-border bg-muted/20">
+                    <div className="text-sm text-muted-foreground mb-2">Conseils pour l'étape</div>
+                    <ul className="list-disc pl-5 space-y-1">
+                        {nextStepTips.slice(0, 5).map((t, i) => (
+                            <li key={i} className="text-sm text-muted-foreground">{t}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {/* Barre de recherche et contrôles */}
             <div className="space-y-4">
@@ -509,6 +534,14 @@ const DashboardPage: React.FC = () => {
                     onNavigateToSession={handleNavigateToSession}
                 />
             )}
+
+            {/* Super Focus */}
+            <SuperFocusModal
+                isOpen={isSuperFocusOpen}
+                onClose={() => setIsSuperFocusOpen(false)}
+                stepTitle={nextStepTitle || ''}
+                tips={nextStepTips}
+            />
         </div>
     );
 };
