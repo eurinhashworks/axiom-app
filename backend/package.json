@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/test-backend.js",
+    "test:auth": "node tests/test-with-auth.js",
+    "test:integration": "node tests/test-backend.js"
   },
   "dependencies": {
     "@google/genai": "^1.27.0",
