@@ -8,7 +8,7 @@
 
 import http from 'http';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const TESTS = [];
 let PASSED = 0;
 let FAILED = 0;
@@ -83,7 +83,7 @@ test('Health Check - Backend accessible', async () => {
   const url = new URL(`${BACKEND_URL}/health`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
   });
@@ -106,7 +106,7 @@ test('CORS - Headers présents', async () => {
   const url = new URL(`${BACKEND_URL}/health`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
     headers: {
@@ -126,7 +126,7 @@ test('404 - Route inexistante', async () => {
   const url = new URL(`${BACKEND_URL}/api/v1/nonexistent`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
   });
@@ -142,7 +142,7 @@ test('401 - Route authentifiée sans token', async () => {
   const url = new URL(`${BACKEND_URL}/api/v1/ideas`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
   });
@@ -162,7 +162,7 @@ test('401 - Route authentifiée avec token invalide', async () => {
   const url = new URL(`${BACKEND_URL}/api/v1/ideas`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
     headers: {
@@ -181,7 +181,7 @@ test('400 - POST /api/v1/analysis/analyze sans body', async () => {
   const url = new URL(`${BACKEND_URL}/api/v1/analysis/analyze`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'POST',
     headers: {
@@ -201,7 +201,7 @@ test('Content-Type - Application JSON accepté', async () => {
   const url = new URL(`${BACKEND_URL}/health`);
   const response = await makeRequest({
     hostname: url.hostname,
-    port: url.port || 3001,
+    port: url.port || 3000,
     path: url.pathname,
     method: 'GET',
     headers: {

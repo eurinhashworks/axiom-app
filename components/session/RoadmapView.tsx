@@ -5,6 +5,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { useIdeas } from '../../contexts/IdeasContext';
 import ExportModal from './ExportModal';
+import RoadmapMindmapView from './RoadmapMindmapView';
 
 interface RoadmapViewProps {
     idea: Idea;
@@ -40,10 +41,42 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
         setActiveIdea(null);
     };
 
+    const handleStepToggle = async (index: number) => {
+        await handleToggleStep(index);
+    };
+
     return (
+        <div className="space-y-6 animate-fade-in">
+            {/* Mode Toggle */}
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg sm:text-xl font-semibold">Feuille de Route Interactive</h3>
+                <div className="flex gap-2">
+                    <Button
+                        variant={viewMode === 'mindmap' ? 'primary' : 'secondary'}
+                        onClick={() => setViewMode('mindmap')}
+                        className="text-sm"
+                    >
+                        🗺️ Mindmap
+                    </Button>
+                    <Button
+                        variant={viewMode === 'list' ? 'primary' : 'secondary'}
+                        onClick={() => setViewMode('list')}
+                        className="text-sm"
+                    >
+                        📋 Liste
+                    </Button>
+                </div>
+            </div>
+
+            {/* Vue Mindmap */}
+            {viewMode === 'mindmap' && (
+                <RoadmapMindmapView idea={idea} onStepToggle={handleStepToggle} />
+            )}
+
+            {/* Vue Liste */}
+            {viewMode === 'list' && (
         <Card className="animate-fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold">Feuille de Route Interactive</h3>
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                     <span className="text-xs sm:text-sm text-muted-foreground">
                         {completedSteps} / {totalSteps} complétées
@@ -130,6 +163,8 @@ const RoadmapView: React.FC<RoadmapViewProps> = ({ idea }) => {
                 />
             )}
         </Card>
+            )}
+        </div>
     );
 };
 

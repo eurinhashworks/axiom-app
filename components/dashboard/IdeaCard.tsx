@@ -30,7 +30,7 @@ const ScorePill: React.FC<{ label: string, score?: number }> = ({ label, score }
     )
 };
 
-const IdeaCard: React.FC<IdeaCardProps> = ({ 
+const IdeaCard: React.FC<IdeaCardProps> = React.memo(({ 
     idea, 
     onSelect, 
     compact = false, 
@@ -135,6 +135,8 @@ const IdeaCard: React.FC<IdeaCardProps> = ({
             </div>
         </Card>
     );
-};
+});
+
+IdeaCard.displayName = 'IdeaCard';
 
 export default IdeaCard;

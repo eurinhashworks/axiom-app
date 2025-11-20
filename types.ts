@@ -54,6 +54,95 @@ export interface ClarifyingQuestionAnswer {
     timestamp: number;
 }
 
+// ============================================================================
+// Sprint 1: Recherche Web + SWOT + Go/No-Go
+// ============================================================================
+
+export interface Strength {
+    description: string;
+    impact: 'high' | 'medium' | 'low';
+    evidence?: string;
+}
+
+export interface Weakness {
+    description: string;
+    severity: 'high' | 'medium' | 'low';
+    mitigation?: string;
+}
+
+export interface Opportunity {
+    description: string;
+    potential: 'high' | 'medium' | 'low';
+    timeframe?: string;
+}
+
+export interface Threat {
+    description: string;
+    likelihood: 'high' | 'medium' | 'low';
+    impact: 'high' | 'medium' | 'low';
+    mitigation?: string;
+}
+
+export interface SWOTAnalysis {
+    strengths: Strength[];
+    weaknesses: Weakness[];
+    opportunities: Opportunity[];
+    threats: Threat[];
+    strategicImplications: string[];
+}
+
+export interface Competitor {
+    name: string;
+    url?: string;
+    type: 'direct' | 'indirect';
+    description?: string;
+    strengths?: string[];
+    weaknesses?: string[];
+    marketShare?: string;
+}
+
+export interface MarketTrend {
+    trend: string;
+    description: string;
+    relevance: 'high' | 'medium' | 'low';
+    source?: string;
+    date?: string;
+}
+
+export interface NewsArticle {
+    title: string;
+    url: string;
+    snippet: string;
+    date?: string;
+    source?: string;
+}
+
+export interface WebResearchResults {
+    competitors: Competitor[];
+    marketTrends: MarketTrend[];
+    newsArticles: NewsArticle[];
+    searchQueries: string[];
+}
+
+export interface CompetitiveAnalysis {
+    directCompetitors: Competitor[];
+    indirectCompetitors: Competitor[];
+    competitiveAdvantages: string[];
+    competitiveGaps: string[];
+    marketPosition: 'leader' | 'challenger' | 'follower' | 'niche';
+}
+
+export interface GoNoGoRecommendation {
+    decision: 'go' | 'no-go' | 'pivot' | 'wait';
+    confidence: number; // 0-100
+    rationale: string;
+    keyFactors: {
+        positive: string[];
+        negative: string[];
+    };
+    conditions: string[];
+}
+
 export interface Idea {
     marketSize: number;
     problemUrgency: number;
@@ -79,6 +168,11 @@ export interface Idea {
     userId: string;
     updatedAt: number;
     likeCount?: number; // Nombre total de likes (pour éviter de charger tous les likes)
+    // Sprint 1: Nouveaux champs
+    swotAnalysis?: SWOTAnalysis;
+    webResearch?: WebResearchResults;
+    competitiveAnalysis?: CompetitiveAnalysis;
+    goNoGo?: GoNoGoRecommendation;
 }
 
 export interface Comment {

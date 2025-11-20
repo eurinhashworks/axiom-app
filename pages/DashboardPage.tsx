@@ -3,7 +3,7 @@ import { useIdeas } from '../contexts/IdeasContext';
 import { Idea, IdeaStatus, Roadmap, Step } from '../types';
 import { firebaseService } from '../services/firebaseService';
 import { useAuth } from '../contexts/AuthContext';
-import * as geminiService from '../services/geminiService';
+import apiClient from '../services/apiClient';
 import Button from '../components/ui/Button';
 import IdeaCard from '../components/dashboard/IdeaCard';
 import IdeaCardEnhanced from '../components/dashboard/IdeaCardEnhanced';
@@ -177,10 +177,15 @@ const DashboardPage: React.FC = () => {
             showToast('Vous avez besoin d\'au moins deux idées évaluées pour les prioriser.', 'warning');
             return;
         }
+        if (!user) {
+            showToast('Vous devez être connecté pour prioriser les idées', 'error');
+            return;
+        }
         setIsPrioritizing(true);
         try {
-            const result = await geminiService.prioritizeIdeas(evaluatedIdeas);
-            setPrioritizationResult(result);
+            const token = await user.getIdToken();
+            const response = await apiClient.prioritizeIdeas(evaluatedIdeas, token);
+            setPrioritizationResult(response.prioritization);
             showToast('Priorisation terminée avec succès !', 'success');
         } catch (error) {
             console.error("Failed to prioritize ideas:", error);

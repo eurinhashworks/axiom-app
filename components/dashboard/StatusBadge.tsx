@@ -5,7 +5,7 @@ interface StatusBadgeProps {
   status: IdeaStatus;
 }
 
-const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+const StatusBadge: React.FC<StatusBadgeProps> = React.memo(({ status }) => {
   const statusStyles: { [key in IdeaStatus]: { text: string; bg: string; } } = {
     DRAFT: { text: 'text-gray-800 dark:text-gray-200', bg: 'bg-gray-200 dark:bg-gray-700' },
     ANALYZING: { text: 'text-blue-800 dark:text-blue-200', bg: 'bg-blue-200 dark:bg-blue-800' },
@@ -22,6 +22,8 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       {formattedStatus}
     </span>
   );
-};
+});
+
+StatusBadge.displayName = 'StatusBadge';
 
 export default StatusBadge;

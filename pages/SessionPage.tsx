@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useIdeas } from '../contexts/IdeasContext';
-import * as geminiService from '../services/geminiService';
+import apiClient from '../services/apiClient';
+import { useAuth } from '../contexts/AuthContext';
 import InputSelection from '../components/session/InputSelection';
 import ChatBot from '../components/ChatBot';
 import LiveConversation from '../components/LiveConversation';
@@ -18,6 +19,7 @@ import { handleAPIError } from '../utils/errorHandler';
 
 const SessionPage: React.FC = () => {
     const { activeIdea, updateIdea, setActiveIdea, addIdea } = useIdeas();
+    const { user } = useAuth();
     const { showToast } = useToast();
     const [inputMethod, setInputMethod] = useState<'text' | 'voice' | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -34,11 +36,16 @@ const SessionPage: React.FC = () => {
 
     const handleBrainDumpSubmit = async (brainDump: string) => {
         if (!activeIdea) return;
+        if (!user) {
+            showToast('Vous devez être connecté pour analyser une idée', 'error');
+            return;
+        }
         setIsLoading(true);
         try {
             await updateIdea(activeIdea.id, { brainDump, status: 'ANALYZING' });
-            const analysis = await geminiService.analyzeBrainDump(brainDump);
-            await updateIdea(activeIdea.id, { analysis, status: 'ANALYZED' });
+            const token = await user.getIdToken();
+            const response = await apiClient.analyzeBrainDump(brainDump, activeIdea.id, token);
+            await updateIdea(activeIdea.id, { analysis: response.analysis, status: 'ANALYZED' });
             showToast('Analyse terminée avec succès !', 'success');
         } catch (error) {
             const errorInfo = handleAPIError(error);

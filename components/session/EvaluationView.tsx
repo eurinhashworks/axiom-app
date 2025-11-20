@@ -1,10 +1,12 @@
 // Fix: Implement EvaluationView component to resolve module not found and related errors.
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Idea, RoadmapStep } from '../../types';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { useIdeas } from '../../contexts/IdeasContext';
-import * as geminiService from '../../services/geminiService';
+import apiClient from '../../services/apiClient';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import Spinner from '../ui/Spinner';
 import TechComparisonModal from './TechComparisonModal';
 
@@ -14,6 +16,8 @@ interface EvaluationViewProps {
 
 const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
     const { updateIdea } = useIdeas();
+    const { user } = useAuth();
+    const { showToast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const [showTechComparison, setShowTechComparison] = useState(false);
 
@@ -21,13 +25,20 @@ const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
 
     const generateRoadmap = async () => {
         if (idea.status !== 'EVALUATED') return;
+        if (!user) {
+            showToast('Vous devez être connecté pour générer une roadmap', 'error');
+            return;
+        }
         setIsLoading(true);
         try {
-            const roadmapStrings = await geminiService.generateRoadmap(idea);
-            const roadmapSteps: RoadmapStep[] = roadmapStrings.map(step => ({ text: step, completed: false }));
+            const token = await user.getIdToken();
+            const response = await apiClient.generateRoadmap(idea, idea.id, token);
+            const roadmapSteps: RoadmapStep[] = response.roadmapSteps.map(step => ({ text: step, completed: false }));
             await updateIdea(idea.id, { roadmapSteps, status: 'ROADMAP_GENERATED' });
+            showToast('Roadmap générée avec succès !', 'success');
         } catch (e: any) {
             console.error("Error generating roadmap:", e.message);
+            showToast('Une erreur est survenue lors de la génération de la roadmap.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -160,11 +171,19 @@ const EvaluationView: React.FC<EvaluationViewProps> = ({ idea }) => {
                 </Card>
             )}
 
-            {idea.status === 'EVALUATED' && (
+            {/* Génération automatique après évaluation */}
+            {useEffect(() => {
+                if (idea.status === 'EVALUATED' && !idea.roadmapSteps && !isLoading && user) {
+                    generateRoadmap();
+                }
+            }, [idea.status, idea.roadmapSteps])}
+
+            {idea.status === 'EVALUATED' && !idea.roadmapSteps && (
                 <div className="text-center">
-                    <Button onClick={generateRoadmap} disabled={isLoading}>
-                        {isLoading ? <Spinner /> : 'Générer la Feuille de Route'}
-                    </Button>
+                    <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                        <Spinner />
+                        <span>Génération automatique de la roadmap...</span>
+                    </div>
                 </div>
             )}
 

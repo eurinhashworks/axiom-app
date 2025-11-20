@@ -2,7 +2,7 @@
  * API Client pour communiquer avec le backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface RequestOptions extends RequestInit {
   token?: string;
@@ -112,6 +112,28 @@ class ApiClient {
     return this.request<{ evaluation: any }>('/api/v1/analysis/evaluate', {
       method: 'POST',
       body: JSON.stringify({ ideaId, idea }),
+      token,
+    });
+  }
+
+  // Roadmap endpoint
+  async generateRoadmap(idea: any, ideaId?: string, token?: string) {
+    if (!token) throw new Error('Token requis pour générer la roadmap');
+    
+    return this.request<{ roadmapSteps: string[] }>('/api/v1/analysis/generate-roadmap', {
+      method: 'POST',
+      body: JSON.stringify({ ideaId, idea }),
+      token,
+    });
+  }
+
+  // Prioritize endpoint
+  async prioritizeIdeas(ideas: any[], token?: string) {
+    if (!token) throw new Error('Token requis pour prioriser les idées');
+    
+    return this.request<{ prioritization: string }>('/api/v1/analysis/prioritize', {
+      method: 'POST',
+      body: JSON.stringify({ ideas }),
       token,
     });
   }

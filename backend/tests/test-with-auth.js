@@ -13,7 +13,7 @@
 
 import http from 'http';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
 const FIREBASE_TOKEN = process.env.FIREBASE_TOKEN;
 
 if (!FIREBASE_TOKEN) {
@@ -66,7 +66,7 @@ async function runTests() {
     console.log('\n1️⃣  Test: GET /api/v1/ideas');
     const response = await makeRequest({
       hostname: url.hostname,
-      port: url.port || 3001,
+      port: url.port || 3000,
       path: '/api/v1/ideas',
       method: 'GET',
       headers: {
@@ -100,7 +100,7 @@ async function runTests() {
 
     const response = await makeRequest({
       hostname: url.hostname,
-      port: url.port || 3001,
+      port: url.port || 3000,
       path: '/api/v1/ideas',
       method: 'POST',
       headers: {
@@ -130,7 +130,7 @@ async function runTests() {
 
     const response = await makeRequest({
       hostname: url.hostname,
-      port: url.port || 3001,
+      port: url.port || 3000,
       path: '/api/v1/analysis/analyze',
       method: 'POST',
       headers: {

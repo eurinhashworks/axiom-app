@@ -4,7 +4,7 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { useIdeas } from '../../contexts/IdeasContext';
 import { useToast } from '../../contexts/ToastContext';
-import * as geminiService from '../../services/geminiService';
+import apiClient from '../../services/apiClient';
 import { advancedScoringService } from '../../services/scoringService';
 import { useAuth } from '../../contexts/AuthContext';
 import { firebaseService } from '../../services/firebaseService';
@@ -23,9 +23,15 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ idea }) => {
 
     const evaluateCurrentIdea = async () => {
         if (idea.status !== 'ANALYZED') return;
+        if (!user) {
+            showToast('Vous devez être connecté pour évaluer une idée', 'error');
+            return;
+        }
         setIsLoading(true);
         try {
-            const evaluation = await geminiService.evaluateIdea(idea);
+            const token = await user.getIdToken();
+            const response = await apiClient.evaluateIdea(idea, idea.id, token);
+            const evaluation = response.evaluation;
             
             // Charger le profil utilisateur pour le scoring adaptatif
             let userProfile = null;

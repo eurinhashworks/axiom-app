@@ -7,7 +7,7 @@ interface CardProps {
   ref?: React.Ref<HTMLDivElement>;
 }
 
-const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className, onClick }, ref) => {
+const Card = React.memo(React.forwardRef<HTMLDivElement, CardProps>(({ children, className, onClick }, ref) => {
   return (
     <div 
       ref={ref}
@@ -17,7 +17,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className,
       {children}
     </div>
   );
-});
+}));
 
 Card.displayName = 'Card';
 

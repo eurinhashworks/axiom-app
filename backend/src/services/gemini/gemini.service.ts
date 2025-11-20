@@ -18,23 +18,46 @@ const AVAILABLE_MODELS = [
 // Modèle par défaut (peut être surchargé via env)
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || AVAILABLE_MODELS[0];
 
-const CONFIG = {
-    models: AVAILABLE_MODELS,
-    defaultModel: DEFAULT_MODEL,
-    apiKey: process.env.API_KEY || process.env.GEMINI_API_KEY,
-    timeout: parseInt(process.env.GEMINI_TIMEOUT || '60000', 10), // 60s par défaut
-    maxRetries: parseInt(process.env.GEMINI_MAX_RETRIES || '3', 10),
-    retryDelay: parseInt(process.env.GEMINI_RETRY_DELAY || '1000', 10), // 1s par défaut
-    enableModelFallback: process.env.GEMINI_ENABLE_FALLBACK !== 'false', // Activé par défaut
-};
-
-// Vérifier que la clé API est présente
-if (!CONFIG.apiKey) {
-    throw new Error("Clé API Gemini manquante. Veuillez définir API_KEY ou GEMINI_API_KEY dans les variables d'environnement.");
+// Fonction pour charger la configuration de manière lazy
+function getConfig() {
+    const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+    
+    // Vérifier que la clé API est présente
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+        throw new Error("Clé API Gemini manquante. Veuillez définir API_KEY ou GEMINI_API_KEY dans les variables d'environnement avec une vraie clé API.");
+    }
+    
+    return {
+        models: AVAILABLE_MODELS,
+        defaultModel: DEFAULT_MODEL,
+        apiKey,
+        timeout: parseInt(process.env.GEMINI_TIMEOUT || '60000', 10), // 60s par défaut
+        maxRetries: parseInt(process.env.GEMINI_MAX_RETRIES || '3', 10),
+        retryDelay: parseInt(process.env.GEMINI_RETRY_DELAY || '1000', 10), // 1s par défaut
+        enableModelFallback: process.env.GEMINI_ENABLE_FALLBACK !== 'false', // Activé par défaut
+    };
 }
 
-// Initialize the Google Gemini API client
-const ai = new GoogleGenAI({ apiKey: CONFIG.apiKey! });
+// Initialize the Google Gemini API client (lazy initialization)
+let ai: GoogleGenAI | null = null;
+
+function getAIClient(): GoogleGenAI {
+    if (!ai) {
+        const config = getConfig();
+        ai = new GoogleGenAI({ apiKey: config.apiKey });
+    }
+    return ai;
+}
+
+const CONFIG = {
+    get models() { return AVAILABLE_MODELS; },
+    get defaultModel() { return DEFAULT_MODEL; },
+    get apiKey() { return getConfig().apiKey; },
+    get timeout() { return parseInt(process.env.GEMINI_TIMEOUT || '60000', 10); },
+    get maxRetries() { return parseInt(process.env.GEMINI_MAX_RETRIES || '3', 10); },
+    get retryDelay() { return parseInt(process.env.GEMINI_RETRY_DELAY || '1000', 10); },
+    get enableModelFallback() { return process.env.GEMINI_ENABLE_FALLBACK !== 'false'; },
+};
 
 // Tracking des modèles utilisés (pour éviter de réessayer un modèle qui a échoué récemment)
 const modelFailureTracker = new Map<string, { failures: number; lastFailure: number }>();
@@ -150,7 +173,7 @@ export class RateLimitError extends GeminiServiceError {
 /**
  * Échappe les caractères spéciaux dans les chaînes pour éviter les injections de prompt
  */
-function escapePromptInput(input: string): string {
+export function escapePromptInput(input: string): string {
     return input
         .replace(/\\/g, '\\\\')
         .replace(/`/g, '\\`')
@@ -278,7 +301,7 @@ function getNextAvailableModel(startingModel?: string): string {
 /**
  * Retry avec backoff exponentiel et fallback de modèle automatique
  */
-async function retryWithBackoff<T>(
+export async function retryWithBackoff<T>(
     fn: (model: string) => Promise<T>,
     maxRetries: number = CONFIG.maxRetries,
     initialDelay: number = CONFIG.retryDelay,
@@ -355,7 +378,7 @@ interface GenerateContentWithSchemaOptions {
     functionName: string;
 }
 
-async function generateContentWithSchema<T>(
+export async function generateContentWithSchema<T>(
     options: GenerateContentWithSchemaOptions
 ): Promise<T> {
     const { prompt, schema, functionName } = options;
@@ -370,7 +393,7 @@ async function generateContentWithSchema<T>(
         
         try {
             const response = await withTimeout(
-                ai.models.generateContent({
+                getAIClient().models.generateContent({
                     model: model,
                     contents: prompt,
                     config: {
@@ -437,7 +460,7 @@ async function generateContentText(
         
         try {
             const response = await withTimeout(
-                ai.models.generateContent({
+                getAIClient().models.generateContent({
                     model: model,
                     contents: prompt,
                 }),
