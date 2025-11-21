@@ -6,6 +6,7 @@ import StatusBadge from './StatusBadge';
 import EditIdeaModal from './EditIdeaModal';
 import LikeButton from './LikeButton';
 import CommentsSection from './CommentsSection';
+import WorkflowStepper from './WorkflowStepper';
 import { useIdeas } from '../../contexts/IdeasContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,18 +18,18 @@ interface IdeaDetailModalProps {
     onNavigateToSession?: () => void;
 }
 
-const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({ 
-    idea, 
-    isOpen, 
+const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
+    idea,
+    isOpen,
     onClose,
-    onNavigateToSession 
+    onNavigateToSession
 }) => {
     const { setActiveIdea, updateIdea } = useIdeas();
     const { user } = useAuth();
     const { showToast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [isTogglingPublic, setIsTogglingPublic] = useState(false);
-    
+
     const isOwner = user && (idea.userId === user.uid || idea.authorId === user.uid);
 
     const handleStartSession = () => {
@@ -60,8 +61,8 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
 
             await updateIdea(idea.id, updates);
             showToast(
-                newPublicStatus 
-                    ? 'Idée publiée avec succès ! Elle est maintenant visible publiquement.' 
+                newPublicStatus
+                    ? 'Idée publiée avec succès ! Elle est maintenant visible publiquement.'
                     : 'Idée retirée de la publication. Elle est maintenant privée.',
                 'success'
             );
@@ -171,7 +172,7 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                                 <div className="text-xs sm:text-sm text-muted-foreground mb-1">Score d'Opportunité</div>
                                 <div className="text-lg sm:text-xl font-bold text-brand">{idea.opportunityScore.toFixed(1)}/10</div>
                                 <div className="w-full bg-background rounded-full h-2 mt-2">
-                                    <div 
+                                    <div
                                         className="bg-brand h-2 rounded-full transition-all"
                                         style={{ width: `${(idea.opportunityScore / 10) * 100}%` }}
                                     />
@@ -183,7 +184,7 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                                 <div className="text-xs sm:text-sm text-muted-foreground mb-1">Score de Faisabilité</div>
                                 <div className="text-lg sm:text-xl font-bold text-brand">{idea.feasibilityScore.toFixed(1)}/10</div>
                                 <div className="w-full bg-background rounded-full h-2 mt-2">
-                                    <div 
+                                    <div
                                         className="bg-brand h-2 rounded-full transition-all"
                                         style={{ width: `${(idea.feasibilityScore / 10) * 100}%` }}
                                     />
@@ -341,18 +342,25 @@ const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
                     </div>
                 </div>
 
+                {/* Workflow Stepper */}
+                <div className="py-4 border-t border-border">
+                    <WorkflowStepper
+                        currentStatus={idea.status}
+                        onStepClick={(status) => {
+                            console.log('Step clicked:', status);
+                        }}
+                    />
+                </div>
+
                 {/* Section commentaires pour les idées publiques */}
                 {idea.isPublic && (
                     <div className="pt-4 border-t border-border">
                         <CommentsSection ideaId={idea.id} />
                     </div>
                 )}
-
-                
             </div>
-        </Modal>
+        </Modal >
     );
 };
 
 export default IdeaDetailModal;
-

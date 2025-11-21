@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useIdeas } from '../contexts/IdeasContext';
 import Card from '../components/ui/Card';
-import IdeaCard from '../components/dashboard/IdeaCard';
+
 import { Idea } from '../types';
 
 const ProfilePage: React.FC = () => {
@@ -14,7 +14,7 @@ const ProfilePage: React.FC = () => {
         const publicIdeas = ideas.filter(i => i.isPublic).length;
         const evaluatedIdeas = ideas.filter(i => i.status === 'EVALUATED' || i.status === 'ROADMAP_GENERATED').length;
         const roadmapsGenerated = ideas.filter(i => i.status === 'ROADMAP_GENERATED').length;
-        
+
         // Calculer le pourcentage moyen de complétion des roadmaps
         const roadmapsWithSteps = ideas.filter(i => i.roadmapSteps && i.roadmapSteps.length > 0);
         const avgCompletion = roadmapsWithSteps.length > 0
@@ -134,7 +134,10 @@ const ProfilePage: React.FC = () => {
                     <h2 className="text-xl sm:text-2xl font-bold mb-4">Mes Idées Publiques</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                         {publicIdeas.map(idea => (
-                            <IdeaCard key={idea.id} idea={idea} onSelect={() => setActiveIdea(idea)} />
+                            <div key={idea.id} onClick={() => setActiveIdea(idea)} className="p-4 border border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                                <h3 className="font-bold text-lg mb-2">{idea.title}</h3>
+                                <p className="text-sm text-muted-foreground line-clamp-3">{idea.brainDump}</p>
+                            </div>
                         ))}
                     </div>
                 </div>
