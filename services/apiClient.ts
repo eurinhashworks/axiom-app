@@ -1,146 +1,137 @@
 /**
- * API Client pour communiquer avec le backend
+ * API Client simplifié pour communiquer avec Firebase Functions
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-interface RequestOptions extends RequestInit {
-  token?: string;
-}
+// En mode développement, on pointe vers l'URL locale de l'émulateur Firebase Functions
+// En production, on utilise l'URL du projet Firebase
+const API_BASE_URL = import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:5001/axiom-app-3ec61/us-central1/api'
+    : 'https://us-central1-axiom-app-3ec61.cloudfunctions.net/api');
 
 class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string = API_BASE_URL) {
-    this.baseUrl = baseUrl;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestOptions = {}
-  ): Promise<T> {
-    const { token, ...fetchOptions } = options;
-
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...fetchOptions.headers,
-    };
-
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    const url = `${this.baseUrl}${endpoint}`;
-
-    try {
-      const response = await fetch(url, {
-        ...fetchOptions,
-        headers,
-      });
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({
-          error: {
-            code: 'UNKNOWN_ERROR',
-            message: `HTTP ${response.status}: ${response.statusText}`,
-          },
-        }));
-        throw new Error(error.error?.message || 'Erreur API');
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Erreur de connexion au serveur');
-    }
-  }
-
   // Ideas endpoints
   async getIdeas(token: string) {
-    return this.request<{ ideas: any[] }>('/api/v1/ideas', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/ideas`, {
       method: 'GET',
-      token,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
-  }
 
-  async getIdea(id: string, token: string) {
-    return this.request(`/api/v1/ideas/${id}`, {
-      method: 'GET',
-      token,
-    });
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   async createIdea(idea: { title: string; brainDump: string; status?: string }, token: string) {
-    return this.request('/api/v1/ideas', {
+    const response = await fetch(`${API_BASE_URL}/api/v1/ideas`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(idea),
-      token,
     });
-  }
 
-  async updateIdea(id: string, updates: any, token: string) {
-    return this.request(`/api/v1/ideas/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updates),
-      token,
-    });
-  }
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
 
-  async deleteIdea(id: string, token: string) {
-    return this.request(`/api/v1/ideas/${id}`, {
-      method: 'DELETE',
-      token,
-    });
+    return response.json();
   }
 
   // Analysis endpoints
   async analyzeBrainDump(brainDump: string, ideaId?: string, token?: string) {
     if (!token) throw new Error('Token requis pour l\'analyse');
-    
-    return this.request<{ analysis: any }>('/api/v1/analysis/analyze', {
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/analyze`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ ideaId, brainDump }),
-      token,
     });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   async evaluateIdea(idea: any, ideaId?: string, token?: string) {
     if (!token) throw new Error('Token requis pour l\'évaluation');
-    
-    return this.request<{ evaluation: any }>('/api/v1/analysis/evaluate', {
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/evaluate`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ ideaId, idea }),
-      token,
     });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Roadmap endpoint
   async generateRoadmap(idea: any, ideaId?: string, token?: string) {
     if (!token) throw new Error('Token requis pour générer la roadmap');
-    
-    return this.request<{ roadmapSteps: string[] }>('/api/v1/analysis/generate-roadmap', {
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/generate-roadmap`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ ideaId, idea }),
-      token,
     });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Prioritize endpoint
   async prioritizeIdeas(ideas: any[], token?: string) {
     if (!token) throw new Error('Token requis pour prioriser les idées');
-    
-    return this.request<{ prioritization: string }>('/api/v1/analysis/prioritize', {
+
+    const response = await fetch(`${API_BASE_URL}/api/v1/analysis/prioritize`, {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ ideas }),
-      token,
     });
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 
   // Health check
   async healthCheck() {
-    return this.request<{ status: string; timestamp: number }>('/health');
+    const response = await fetch(`${API_BASE_URL}/health`);
+
+    if (!response.ok) {
+      throw new Error(`Erreur API: ${response.status} - ${response.statusText}`);
+    }
+
+    return response.json();
   }
 }
 
