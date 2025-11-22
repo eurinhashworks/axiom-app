@@ -269,10 +269,9 @@ export const analyzeIdea = functions.https.onRequest(async (req, res) => {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await verifyAuthToken(token);
-    const userId = decodedToken.uid;
+    await verifyAuthToken(token);
 
-    const { ideaId, brainDump } = req.body;
+    const { brainDump } = req.body;
 
     if (!brainDump) {
       res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Brain dump est requis' } });
@@ -280,34 +279,14 @@ export const analyzeIdea = functions.https.onRequest(async (req, res) => {
     }
 
     // Use analyzeBrainDump function from gemini service
-    const { analyzeBrainDump } = await import('./services/gemini/gemini.service.js');
+    const { analyzeBrainDump } = await import('./services/gemini/gemini.service.ts');
 
-    // Perform basic analysis
+    // Perform analysis
     const analysis = await analyzeBrainDump(brainDump);
 
-    // If ideaId is provided, update the idea
-    if (ideaId) {
-      const ideaRef = getFirestore().collection('ideas').doc(ideaId);
-      const doc = await ideaRef.get();
+    // The new response format is the analysis object itself
+    res.json(analysis);
 
-      if (!doc.exists) {
-        res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Idée non trouvée' } });
-        return;
-      }
-
-      if (doc.data()?.userId !== userId) {
-        res.status(403).json({ error: { code: 'FORBIDDEN', message: 'Accès non autorisé' } });
-        return;
-      }
-
-      await ideaRef.update({
-        analysis,
-        status: 'ANALYZED',
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-
-    res.json({ analysis });
   } catch (error: any) {
     console.error('Error in analyzeIdea:', error);
     res.status(500).json({ error: { code: 'INTERNAL_SERVER_ERROR', message: error.message || 'Erreur lors de l\'analyse de l\'idée' } });

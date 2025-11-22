@@ -155,7 +155,33 @@ const analysisSchema = {
   required: ["summary", "clarifyingQuestions", "potentialRisks"],
 };
 
-export async function analyzeBrainDump(brainDump: string): Promise<IdeaAnalysis> {
+// Schéma de la nouvelle réponse attendue
+const sparringAnalysisSchema = {
+  type: 'object',
+  properties: {
+    extractedIdeas: {
+      type: 'array',
+      description: "Une liste de 1 à 3 idées principales extraites du texte. Chaque idée doit avoir un titre et une question de départ.",
+      items: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            description: "Un titre court et percutant pour l'idée (max 5-7 mots)."
+          },
+          startingQuestion: {
+            type: 'string',
+            description: "La première question ouverte et stimulante à poser pour commencer l'exploration de cette idée. Doit être une question qui challenge une hypothèse clé ou explore la motivation profonde."
+          }
+        },
+        required: ["title", "startingQuestion"]
+      }
+    }
+  },
+  required: ["extractedIdeas"],
+};
+
+export async function analyzeBrainDump(brainDump: string): Promise<{ extractedIdeas: { title: string, startingQuestion: string }[] }> {
   // Validation de l'entrée
   if (!brainDump || typeof brainDump !== 'string') {
     throw new Error("Le brain dump est requis et doit être une chaîne de caractères");
@@ -172,51 +198,44 @@ export async function analyzeBrainDump(brainDump: string): Promise<IdeaAnalysis>
 
   const escapedBrainDump = escapePromptInput(trimmedBrainDump);
 
-  const prompt = `Vous êtes un analyste critique et objectif spécialisé dans l'évaluation d'idées d'entreprise en phase d'idéation. Votre rôle est de fournir une analyse honnête et non biaisée, en évitant l'optimisme excessif comme le pessimisme injustifié.
+  const prompt = `Vous êtes un "partenaire de sparring" pour un innovateur, un coach expérimenté qui aide les créatifs à transformer leurs pensées chaotiques en idées claires. Votre ton est bienveillant mais rigoureux. Votre but n'est pas de juger, mais de challenger pour rendre l'idée plus forte.
 
-**Principes d'analyse :**
-- Restez factuel : basez-vous uniquement sur ce qui est énoncé, évitez les suppositions optimistes
-- Pensez critique : identifiez les hypothèses implicites non validées
-- Considérez les perspectives alternatives : qu'est-ce qui pourrait invalider cette idée ?
-- Évitez les biais de confirmation : ne cherchez pas à valider l'idée mais à la challenger
-- Soyez constructif : critiquez les faiblesses mais proposez des axes d'amélioration
+**Votre mission :**
+À partir du "brain dump" ci-dessous, vous devez faire deux choses :
+1.  **Démêler le chaos :** Extraire de 1 à 3 idées ou projets distincts que l'utilisateur explore.
+2.  **Initier le dialogue :** Pour chaque idée extraite, formuler UNE SEULE première question. Cette question doit être la plus percutante pour commencer l'exploration, en visant un angle mort, une motivation profonde ou une hypothèse fondamentale.
+
+**Exemples de bonnes questions de départ :**
+- "Quelle est la frustration la plus profonde que cette idée cherche à résoudre ?"
+- "Si vous ne pouviez garder qu'une seule fonctionnalité, laquelle serait-ce et pourquoi ?"
+- "Quelle est la plus grande hypothèse que vous faites, qui, si elle était fausse, ferait tout s'écrouler ?"
+- "Qu'est-ce qui vous motive personnellement dans ce projet, au-delà de l'opportunité commerciale ?"
 
 **Brain Dump à analyser :**
 ---
 ${escapedBrainDump}
 ---
 
-**Instructions spécifiques :**
-1. Résumé : Synthétisez l'idée telle qu'elle est décrite, sans ajouter de promesses ou de bénéfices non mentionnés. Restez neutre.
-2. Questions de clarification : Posez des questions qui révèlent les angles morts critiques. Évitez les questions "douces" qui présupposent que l'idée est bonne. Chaque question doit tester une hypothèse fondamentale.
-3. Risques potentiels : Identifiez des risques spécifiques et concrets basés sur ce qui est décrit. Évitez les risques génériques comme "concurrence" sans contexte. Expliquez pourquoi chaque risque est pertinent pour cette idée précise.
+**Instructions de formatage :**
+Fournissez votre réponse au format JSON spécifié. Ne donnez que le JSON.
+- Pour chaque idée, créez un "title" court et percutant.
+- Pour chaque idée, formulez la "startingQuestion".`;
 
-Fournissez votre analyse au format JSON spécifié.`;
-
-  const result = await generateContentWithSchema<IdeaAnalysis>({
+  const result = await generateContentWithSchema<{ extractedIdeas: { title: string, startingQuestion: string }[] }>({
     prompt,
-    schema: analysisSchema,
+    schema: sparringAnalysisSchema,
   });
 
   // Validation de la réponse
-  if (!result.summary || typeof result.summary !== 'string' || result.summary.trim().length === 0) {
-    throw new Error("Le résumé de l'analyse est invalide ou vide");
+  if (!result.extractedIdeas || !Array.isArray(result.extractedIdeas) || result.extractedIdeas.length === 0) {
+    throw new Error("L'analyse n'a pas pu extraire d'idées claires.");
   }
 
-  // Valider les questions de clarification (nouveau format avec choix multiples)
-  if (!Array.isArray(result.clarifyingQuestions) || result.clarifyingQuestions.length < 3) {
-    throw new Error("clarifyingQuestions doit être un tableau avec au moins 3 questions");
-  }
-
-  // Vérifier que chaque question a des options
-  for (const q of result.clarifyingQuestions) {
-    if (typeof q === 'string') continue; // Support ancien format
-    if (!q.question || !q.options || !Array.isArray(q.options) || q.options.length < 3) {
-      throw new Error("Chaque question doit avoir au moins 3 options de réponse");
+  for (const idea of result.extractedIdeas) {
+    if (!idea.title || !idea.startingQuestion) {
+      throw new Error("Chaque idée extraite doit avoir un titre et une question de départ.");
     }
   }
-
-  validateStringArray(result.potentialRisks, "potentialRisks", 3);
 
   return result;
 }

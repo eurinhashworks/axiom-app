@@ -4,10 +4,7 @@
 
 // En mode développement, on pointe vers l'URL locale de l'émulateur Firebase Functions
 // En production, on utilise l'URL du projet Firebase
-const API_BASE_URL = import.meta.env.VITE_API_URL ||
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:5001/axiom-app-3ec61/us-central1/api'
-    : 'https://us-central1-axiom-app-3ec61.cloudfunctions.net/api');
+const API_BASE_URL = '';
 
 class ApiClient {
   // Ideas endpoints

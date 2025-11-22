@@ -1,47 +1,63 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { IdeasProvider } from './contexts/IdeasContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import AxiomFlow from './components/AxiomFlow';
-import SimpleHeader from './components/layout/SimpleHeader';
+import AppLayout from './components/layout/AppLayout';
 import Login from './components/auth/Login';
+import SessionPage from './pages/SessionPage';
 import Spinner from './components/ui/Spinner';
 
-const AppContent: React.FC = () => {
+// Component to handle protected routes
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Spinner />
-          <p className="text-muted-foreground">Chargement...</p>
-        </div>
+        <Spinner />
       </div>
     );
   }
 
   if (!user) {
-    return <Login />;
+    return <Navigate to="/login" replace />;
   }
 
-  return (
-    <IdeasProvider>
-      <div className="bg-background text-foreground min-h-screen flex flex-col transition-colors duration-300">
-        <SimpleHeader />
-        <div className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8">
-          <AxiomFlow />
-        </div>
-      </div>
-    </IdeasProvider>
-  );
+  return <>{children}</>;
 };
 
+// Main App component with routing
 const App: React.FC = () => {
   return (
     <ToastProvider>
       <AuthProvider>
-        <AppContent />
+        <IdeasProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route 
+                path="/session"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <SessionPage />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* Redirect root path to /session or /login based on auth state */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/session" replace />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Router>
+        </IdeasProvider>
       </AuthProvider>
     </ToastProvider>
   );

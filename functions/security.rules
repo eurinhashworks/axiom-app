@@ -1,6 +1,0 @@
-{
-  "rules": {
-    ".write": false,
-    ".read": false
-  }
-}
