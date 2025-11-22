@@ -76,7 +76,7 @@ export async function generateContentWithSchema<T>(
   options: GenerateContentWithSchemaOptions
 ): Promise<T> {
   const { prompt, schema } = options;
-  
+
   if (!prompt || prompt.trim().length === 0) {
     throw new Error("Le prompt ne peut pas être vide");
   }
@@ -339,11 +339,11 @@ ${escapedSummary}
 
 Questions critiques soulevées (à utiliser pour identifier les faiblesses) :
 ${Array.isArray(idea.analysis.clarifyingQuestions) && idea.analysis.clarifyingQuestions[0] && typeof idea.analysis.clarifyingQuestions[0] === 'object'
-    ? idea.analysis.clarifyingQuestions.map((q: any, i: number) => \`- \${i + 1}. \${q.question} (Réponse choisie: \${idea.clarifyingAnswers?.find((a: ClarifyingQuestionAnswer) => a.questionIndex === i)?.selectedOption || 'Non répondue'})\`).join('\n')
-    : escapedQuestions.map((q, i) => \`- \${i + 1}. \${q}\`).join('\n')}
+      ? idea.analysis.clarifyingQuestions.map((q: any, i: number) => `- ${i + 1}. ${q.question} (Réponse choisie: ${idea.clarifyingAnswers?.find((a: ClarifyingQuestionAnswer) => a.questionIndex === i)?.selectedOption || 'Non répondue'})`).join('\n')
+      : escapedQuestions.map((q, i) => `- ${i + 1}. ${q}`).join('\n')}
 
 Risques identifiés (à considérer dans votre évaluation) :
-- \${escapedRisks.join('\n- ')}
+- ${escapedRisks.join('\n- ')}
 
 **Instructions par critère :**
 
@@ -425,7 +425,7 @@ export async function generateRoadmap(idea: Idea): Promise<string[]> {
   const opportunityScore = typeof idea.opportunityScore === 'number' ? idea.opportunityScore.toFixed(1) : 'N/A';
   const feasibilityScore = typeof idea.feasibilityScore === 'number' ? idea.feasibilityScore.toFixed(1) : 'N/A';
 
-  const prompt = \`Vous êtes un conseiller en stratégie startup spécialisé dans la validation d'idées et la construction de MVP. Créez une feuille de route réaliste et orientée validation, pas une roadmap optimiste.
+  const prompt = `Vous êtes un conseiller en stratégie startup spécialisé dans la validation d'idées et la construction de MVP. Créez une feuille de route réaliste et orientée validation, pas une roadmap optimiste.
 
 **Principe fondamental : VALIDER AVANT DE CONSTRUIRE**
 
@@ -433,14 +433,14 @@ Les scores d'évaluation indiquent des faiblesses potentielles qui doivent être
 
 **Contexte de l'idée :**
 
-Titre : \${escapedTitle}
+Titre : ${escapedTitle}
 
 Résumé du concept :
-\${escapedSummary}
+${escapedSummary}
 
 Scores d'évaluation :
-- Opportunité : \${opportunityScore}/10
-- Faisabilité : \${feasibilityScore}/10
+- Opportunité : ${opportunityScore}/10
+- Faisabilité : ${feasibilityScore}/10
 
 **Interprétation des scores :**
 - Score < 6 : Prioriser fortement la validation et les tests de risque critique avant construction
@@ -471,7 +471,7 @@ Scores d'évaluation :
 - Adaptez la roadmap aux scores : si les scores sont faibles, augmentez la proportion d'étapes de validation
 - Évitez les étapes vagues comme "Faire une étude de marché" - soyez spécifique
 
-Générez une liste de 5-7 étapes dans l'ordre chronologique, en commençant toujours par la validation.\`;
+Générez une liste de 5-7 étapes dans l'ordre chronologique, en commençant toujours par la validation.`;
 
   const result = await generateContentWithSchema<{ roadmapSteps: string[] }>({
     prompt,
@@ -501,9 +501,9 @@ export async function prioritizeIdeas(ideas: Idea[]): Promise<string> {
   // Filtrer et valider les idées évaluées
   const evaluatedIdeas = ideas.filter(idea => {
     return idea.analysis?.summary &&
-           idea.opportunityScore !== undefined &&
-           idea.feasibilityScore !== undefined &&
-           idea.evaluation;
+      idea.opportunityScore !== undefined &&
+      idea.feasibilityScore !== undefined &&
+      idea.evaluation;
   });
 
   if (evaluatedIdeas.length === 0) {
@@ -521,17 +521,17 @@ export async function prioritizeIdeas(ideas: Idea[]): Promise<string> {
     const personalAlignment = idea.evaluation?.personalAlignment ?? 'N/A';
     const technicalFeasibility = idea.evaluation?.technicalFeasibility ?? 'N/A';
 
-    return \`
+    return `
 ---
-### \${escapedTitle}
-- **Concept :** \${escapedSummary}
-- **Score d'Opportunité :** \${opportunityScore}/10 (Urgence: \${problemUrgency}, Taille du marché: \${targetMarketSize}, Avantage: \${competitiveAdvantage})
-- **Score de Faisabilité :** \${feasibilityScore}/10 (Alignement: \${personalAlignment}, Technique: \${technicalFeasibility})
+### ${escapedTitle}
+- **Concept :** ${escapedSummary}
+- **Score d'Opportunité :** ${opportunityScore}/10 (Urgence: ${problemUrgency}, Taille du marché: ${targetMarketSize}, Avantage: ${competitiveAdvantage})
+- **Score de Faisabilité :** ${feasibilityScore}/10 (Alignement: ${personalAlignment}, Technique: ${technicalFeasibility})
 ---
-\`;
+`;
   }).join('\n');
 
-  const prompt = \`Vous êtes un investisseur en VC qui doit aider un entrepreneur à prioriser ses idées. Votre objectif est de recommander la meilleure opportunité basée sur une analyse objective et sans biais.
+  const prompt = `Vous êtes un investisseur en VC qui doit aider un entrepreneur à prioriser ses idées. Votre objectif est de recommander la meilleure opportunité basée sur une analyse objective et sans biais.
 
 **Principe de priorisation :**
 - Une idée avec opportunité élevée mais faisabilité faible peut être meilleure qu'une idée avec scores moyens partout
@@ -541,7 +541,7 @@ export async function prioritizeIdeas(ideas: Idea[]): Promise<string> {
 
 **Idées à comparer :**
 
-\${ideaSummaries}
+${ideaSummaries}
 
 **Instructions pour votre analyse :**
 
@@ -570,14 +570,14 @@ export async function prioritizeIdeas(ideas: Idea[]): Promise<string> {
 - Structurez clairement : Analyse → Recommandation → Critique des autres idées
 - Soyez concis mais complet : évitez les longueurs inutiles mais couvrez tous les points importants
 
-Fournissez votre analyse de priorisation.\`;
+Fournissez votre analyse de priorisation.`;
 
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
       contents: prompt,
     });
-    
+
     return response.text?.trim() || "Aucune réponse générée";
   } catch (error) {
     console.error('Erreur lors de la priorisation des idées:', error);

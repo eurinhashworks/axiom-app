@@ -18,7 +18,6 @@ import {
 // On doit les importer depuis le fichier source
 import {
   generateContentWithSchema,
-  retryWithBackoff,
   escapePromptInput,
 } from './gemini.service.js';
 
@@ -192,15 +191,15 @@ ${escapePromptInput(brainDump)}
 ${escapePromptInput(analysis.summary)}
 
 **Risques identifiés :**
-${analysis.potentialRisks.map(r => \`- \${escapePromptInput(r)}\`).join('\n')}
+${analysis.potentialRisks.map(r => `- ${escapePromptInput(r)}`).join('\n')}
 
 **Résultats recherche web :**
-\${webResearch.competitors.length > 0
-  ? \`Concurrents trouvés : \${webResearch.competitors.slice(0, 5).map(c => c.name).join(', ')}\`
-  : 'Aucun concurrent identifié via recherche web'}
-\${webResearch.marketTrends.length > 0
-  ? \`\\nTendances marché : \${webResearch.marketTrends.map(t => t.trend).join(', ')}\`
-  : ''}
+${webResearch.competitors.length > 0
+      ? `Concurrents trouvés : ${webResearch.competitors.slice(0, 5).map(c => c.name).join(', ')}`
+      : 'Aucun concurrent identifié via recherche web'}
+${webResearch.marketTrends.length > 0
+      ? `\nTendances marché : ${webResearch.marketTrends.map(t => t.trend).join(', ')}`
+      : ''}
 
 **Instructions :**
 - Identifiez 3-5 forces (points forts de l'idée)
@@ -211,23 +210,20 @@ ${analysis.potentialRisks.map(r => \`- \${escapePromptInput(r)}\`).join('\n')}
 
 Soyez objectif et critique. Ne surévaluez pas les forces et ne sous-estimez pas les menaces.`;
 
-  const swotAnalysis = await retryWithBackoff(async () => {
-    return await generateContentWithSchema<SWOTAnalysis>({
-      prompt: swotPrompt,
-      schema: swotSchema,
-      functionName: 'generateSWOT',
-    });
+  const swotAnalysis = await generateContentWithSchema<SWOTAnalysis>({
+    prompt: swotPrompt,
+    schema: swotSchema,
   });
 
   // 4. Analyse concurrentielle
   const competitivePrompt = `Analysez la position concurrentielle de cette idée d'entreprise.
 
 **Idée :**
-\${escapePromptInput(ideaTitle || analysis.summary.slice(0, 50))}
-\${escapePromptInput(analysis.summary)}
+${escapePromptInput(ideaTitle || analysis.summary.slice(0, 50))}
+${escapePromptInput(analysis.summary)}
 
 **Concurrents identifiés :**
-\${webResearch.competitors.map((c, i) => \`\${i + 1}. \${c.name}\${c.description ? \` - \${c.description}\` : ''}\${c.url ? \` (\${c.url})\` : ''}\`).join('\n') || 'Aucun concurrent direct identifié'}
+${webResearch.competitors.map((c, i) => `${i + 1}. ${c.name}${c.description ? ` - ${c.description}` : ''}${c.url ? ` (${c.url})` : ''}`).join('\n') || 'Aucun concurrent direct identifié'}
 
 **Instructions :**
 - Classez les concurrents en directs (même marché/produit) et indirects (solutions alternatives)
@@ -237,34 +233,31 @@ Soyez objectif et critique. Ne surévaluez pas les forces et ne sous-estimez pas
 
 Soyez réaliste. Si le marché est saturé, indiquez "follower" ou "niche". Si c'est un nouveau marché, considérez "challenger" ou "leader".`;
 
-  const competitiveAnalysis = await retryWithBackoff(async () => {
-    return await generateContentWithSchema<CompetitiveAnalysis>({
-      prompt: competitivePrompt,
-      schema: competitiveAnalysisSchema,
-      functionName: 'generateCompetitiveAnalysis',
-    });
+  const competitiveAnalysis = await generateContentWithSchema<CompetitiveAnalysis>({
+    prompt: competitivePrompt,
+    schema: competitiveAnalysisSchema,
   });
 
   // 5. Recommandation Go/No-Go
   const goNoGoPrompt = `En tant qu'investisseur VC expérimenté, recommandez si cette idée mérite d'être poursuivie (Go), abandonnée (No-Go), pivotée (Pivot), ou mise en attente (Wait).
 
 **Idée :**
-\${escapePromptInput(ideaTitle || analysis.summary.slice(0, 50))}
-\${escapePromptInput(analysis.summary)}
+${escapePromptInput(ideaTitle || analysis.summary.slice(0, 50))}
+${escapePromptInput(analysis.summary)}
 
 **Analyse SWOT :**
-Forces : \${swotAnalysis.strengths.map(s => s.description).join('; ')}
-Faiblesses : \${swotAnalysis.weaknesses.map(w => w.description).join('; ')}
-Opportunités : \${swotAnalysis.opportunities.map(o => o.description).join('; ')}
-Menaces : \${swotAnalysis.threats.map(t => t.description).join('; ')}
+Forces : ${swotAnalysis.strengths.map((s: any) => s.description).join('; ')}
+Faiblesses : ${swotAnalysis.weaknesses.map((w: any) => w.description).join('; ')}
+Opportunités : ${swotAnalysis.opportunities.map((o: any) => o.description).join('; ')}
+Menaces : ${swotAnalysis.threats.map((t: any) => t.description).join('; ')}
 
 **Position concurrentielle :**
-\${competitiveAnalysis.marketPosition}
-Avantages : \${competitiveAnalysis.competitiveAdvantages.join('; ')}
-Failles : \${competitiveAnalysis.competitiveGaps.join('; ')}
+${competitiveAnalysis.marketPosition}
+Avantages : ${competitiveAnalysis.competitiveAdvantages.join('; ')}
+Failles : ${competitiveAnalysis.competitiveGaps.join('; ')}
 
 **Risques identifiés :**
-\${analysis.potentialRisks.join('; ')}
+${analysis.potentialRisks.join('; ')}
 
 **Instructions :**
 - Decision : "go" si idée solide et exécutable, "no-go" si fondamentalement faible, "pivot" si besoin changement direction, "wait" si marché pas prêt
@@ -275,12 +268,9 @@ Failles : \${competitiveAnalysis.competitiveGaps.join('; ')}
 
 Soyez direct et honnête. Un "no-go" peut être plus utile qu'un "go" basé sur de mauvaises raisons.`;
 
-  const goNoGo = await retryWithBackoff(async () => {
-    return await generateContentWithSchema<GoNoGoRecommendation>({
-      prompt: goNoGoPrompt,
-      schema: goNoGoSchema,
-      functionName: 'generateGoNoGo',
-    });
+  const goNoGo = await generateContentWithSchema<GoNoGoRecommendation>({
+    prompt: goNoGoPrompt,
+    schema: goNoGoSchema,
   });
 
   return {
